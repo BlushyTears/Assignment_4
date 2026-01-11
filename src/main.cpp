@@ -57,18 +57,14 @@ int main ()
 	SearchAndSetResourceDir("resources");
 	
 	Texture wabbit = LoadTexture("wabbit_alpha.png");
-	string mapData = translateMapToString("..//mapData.txt");
-
+	stringstream mapData = transcribeData("..//mapData.txt");
 	Map map(mapData, SCREEN_WIDTH, TILE_SIZE);
 
 	while (!WindowShouldClose())		
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
-
-		map.renderMap(SCREEN_WIDTH, SCREEN_WIDTH - 200);
-
-		DrawText("Hello Raylib", 200,200,20,WHITE);
+		map.renderMap(SCREEN_WIDTH, SCREEN_WIDTH - 200, TILE_SIZE);
 		DrawTexture(wabbit, 400, 200, WHITE);
 		EndDrawing();
 	}
