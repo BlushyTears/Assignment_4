@@ -7,7 +7,8 @@
 #include <fstream>
 #include <sstream>
 
-#include <vector> // probably should replace this 
+#include <vector>
+#include "GraphMap.h"
 
 using namespace std;
 
@@ -34,8 +35,17 @@ struct Tile {
 
 struct Map {
 	std::vector<Tile> tiles;
+	ChartedMap* chartedMap;
+	//std::vector<Connection> thing = ChartedMap.AStar();
+
+	// draw path example (dont remove):
+	//for (int i = 0; i < shortestPath.size(); i++) {
+	//    DrawCircle( shortestPath[i].toNode.x + tileSize / 2, shortestPath[i].toNode.y + tileSize / 2 , 5 / 2, GREEN);
+	//}
+
 	Map(stringstream& ss, int _screenWidth, int _tileSize) {
 		tiles.reserve(10000);
+		chartedMap = new ChartedMap(ss.str(), _tileSize);
 
 		string line;
 		int row = 0;
