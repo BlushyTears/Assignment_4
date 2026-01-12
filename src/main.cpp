@@ -40,6 +40,7 @@
 #include <iostream>
 #include <fstream>
 
+#include "GameManager.h"
 #include "MapManager.h"
 
 // Idea: Game is 1000x1000x with each tile taking up 10 pixels for width and height
@@ -55,21 +56,21 @@ int main ()
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello Raylib");
 	SearchAndSetResourceDir("resources");
+	SetTargetFPS(240);
 	
-	Texture wabbit = LoadTexture("wabbit_alpha.png");
 	stringstream mapData = transcribeData("..//mapData.txt");
 	Map map(mapData, SCREEN_WIDTH, TILE_SIZE);
+	Game game(50);
 
 	while (!WindowShouldClose())		
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
 		map.renderMap(SCREEN_WIDTH, SCREEN_WIDTH - 200, TILE_SIZE);
-		DrawTexture(wabbit, 400, 200, WHITE);
+		game.update();
 		EndDrawing();
 	}
 
-	UnloadTexture(wabbit);
 	CloseWindow();
 
 	return 0;
