@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include <vector>
-#include "Worker.h"
+#include "Units.h"
 #include "raylib.h"
 
 struct Game {
@@ -31,13 +31,12 @@ struct Game {
 	void renderUnits() {
 		for (auto& unit : units) {
 			unit->renderWorker();
+			unit->moveUnit();
 		}
 	}
 
 	void update() {
 		renderUnits();
-		//std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 };
-
-
