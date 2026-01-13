@@ -6,9 +6,12 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
 #include <vector>
+
 #include "GraphMap.h"
+#include "Units.h"
+
+struct UnitBase;
 
 using namespace std;
 
@@ -23,6 +26,7 @@ enum TileType {
 struct Tile {
 	int positionX;
 	int positionY;
+	bool hasBeenScouted = false;
 
 	TileType tileType = Grass;
 	Color tileColor;
@@ -31,11 +35,12 @@ struct Tile {
 		positionX = _x;
 		positionY = _y;
 	}
+	bool isUnitWithinTile(const UnitBase& unit, int perimiterCheck);
 };
 
 struct Map {
-	std::vector<Tile> tiles;
-	ChartedMap* chartedMap;
+	std::vector<Tile> renderedTiles;
+	ChartedMap* accessableTiles; // TODO: Make this a smart pointer
 	//std::vector<Connection> thing = ChartedMap.AStar();
 
 	// draw path example (dont remove):
@@ -44,8 +49,8 @@ struct Map {
 	//}
 
 	Map(stringstream& ss, int _screenWidth, int _tileSize) {
-		tiles.reserve(10000);
-		chartedMap = new ChartedMap(ss.str(), _tileSize);
+		renderedTiles.reserve(10000);
+		accessableTiles = new ChartedMap(ss.str(), _tileSize);
 
 		string line;
 		int row = 0;
@@ -67,20 +72,27 @@ struct Map {
 				else if (line[col] == 'M') {
 					tempTile.tileColor = { 30, 255, 20, 255 };
 				}
-				tiles.push_back(tempTile);
+				renderedTiles.push_back(tempTile);
 			}
 			row++;
 		}
 	}
 
 	void renderMap(int _screenWidth, int _screenHeight, int _tileSize) {
-		for (auto tile : tiles) {
-			DrawRectangle(tile.positionX, tile.positionY, _tileSize, _tileSize, tile.tileColor);
+		// make this const reference whenever other thing runs im working on
+		for (auto const& tile : renderedTiles) {
+			if (!tile.hasBeenScouted) {
+				DrawRectangle(tile.positionX, tile.positionY, _tileSize, _tileSize, GRAY);
+			}
+			else {
+				std::cout << "tile should be visible" << std::endl;
+				DrawRectangle(tile.positionX, tile.positionY, _tileSize, _tileSize, tile.tileColor);
+			}
 		}
 	}
 };
 
-stringstream transcribeData(const string& _path) {
+inline stringstream transcribeData(const string& _path) {
 	ifstream file(_path);
 	stringstream buffer;
 	buffer << file.rdbuf();

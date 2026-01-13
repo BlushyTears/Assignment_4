@@ -1,10 +1,10 @@
 #pragma once
 
-#include "raymath.h"
 #include "raylib.h"
-#include "resource_dir.h"
+#include "raymath.h"
 
 #include <iostream>
+#include <vector>
 
 enum Behaviors {
 	Seek,
@@ -13,6 +13,8 @@ enum Behaviors {
 
 struct Agent;
 struct Object;
+struct Map;
+struct Tile;
 
 struct MovementBehavior {
 	virtual ~MovementBehavior() = default;
@@ -38,19 +40,20 @@ struct UnitBase {
 	// All units should be equally big so it's hard coded here
 	int size = 3;
 	float unitSpeed = 0.1f;
+	const int TILE_SIZE = 10;
+
+	Map* mapReference = nullptr;
 
 	float rotationSmoothness;
 	float orientation;
 	Vector2 rotation;
 	Vector2 forwardDirection;
 
-	void updateBehavior();
+	std::vector<Tile>* renderedTiles;
 
-	UnitBase(int _x, int _y) {
-		pos.x = _x;
-		pos.y = _y;
-		targetPos = pos;
-	}
+	UnitBase(int _x, int _y, Map* _mp);
+
+	void testTile();
 
 	virtual void renderWorker() = 0;
 	void moveUnit() {
@@ -58,15 +61,23 @@ struct UnitBase {
 			Vector2 dir = targetPos - pos;
 			pos += dir * unitSpeed;
 		}
-		else {
-			targetPos.x = 400;
-			targetPos.y = 400;
-		}
+		//else {
+		//	targetPos.x = 400;
+		//	targetPos.y = 400;
+		//}
+	}
+};
+
+// Scout can be created with 1 worker
+struct Scout : UnitBase {
+	Scout(int _x, int _y, Map* _mp) : UnitBase(_x, _y, _mp) {}
+	void renderWorker() {
+		DrawCircle(pos.x, pos.y, size, RED);
 	}
 };
 
 struct Worker : UnitBase {
-	Worker(int _x, int _y) : UnitBase(_x, _y) {}
+	Worker(int _x, int _y, Map* _mp) : UnitBase(_x, _y, _mp) {}
 	void renderWorker() {
 		DrawCircle(pos.x, pos.y, size, RED);
 	}

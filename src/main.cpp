@@ -43,11 +43,11 @@
 #include "GameManager.h"
 #include "MapManager.h"
 
+// Next Todo (Remove this when done): 
+// Create scout class (It's dead simple since it's always just searching the map) that can search the map as well as fog of war for scouts to challenge
+
 // Idea: Game is 1000x1000x with each tile taking up 10 pixels for width and height
 // since game is a 100x100x grid which leaves us 200 pixels for displaying game state
-constexpr int SCREEN_WIDTH = 1000;
-constexpr int SCREEN_HEIGHT = 1200;
-constexpr int TILE_SIZE = 10;
 
 using namespace std;
 
@@ -58,15 +58,15 @@ int main ()
 	SearchAndSetResourceDir("resources");
 	SetTargetFPS(240);
 	
-	stringstream mapData = transcribeData("..//mapData.txt");
-	Map map(mapData, SCREEN_WIDTH, TILE_SIZE);
+	//stringstream mapData = transcribeData("..//mapData.txt");
+	//Map map(mapData, SCREEN_WIDTH, TILE_SIZE);
 	Game game(50);
 
 	while (!WindowShouldClose())		
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
-		map.renderMap(SCREEN_WIDTH, SCREEN_WIDTH - 200, TILE_SIZE);
+		//map.renderMap(SCREEN_WIDTH, SCREEN_WIDTH - 200, TILE_SIZE);
 		game.update();
 		EndDrawing();
 	}
