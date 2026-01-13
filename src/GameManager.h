@@ -36,26 +36,38 @@ struct Game {
 				xCount = 1;
 				yCount++;
 			}
-			units.push_back(std::make_unique<Worker>(
-				baseXSpawn + (spacing * xCount), 
-				baseYSpawn + (spacing * yCount),
-				map));
-			xCount++;
+
+			if (i % 2 == 0) {
+				units.push_back(std::make_unique<Worker>(
+					baseXSpawn + (spacing * xCount),
+					baseYSpawn + (spacing * yCount),
+					map));
+				xCount++;
+			}
+			else {
+				units.push_back(std::make_unique<Scout>(
+					baseXSpawn + (spacing * xCount),
+					baseYSpawn + (spacing * yCount),
+					map));
+				xCount++;
+			}
 
 			units[i]->testTile();
 		}
 	}
 
-	void renderUnits() {
+	void callUnits() {
 		for (auto& unit : units) {
-			unit->renderWorker();
+			unit->renderUnit();
 			unit->moveUnit();
+			unit->moveUnitTowardsInternalGoal();
 		}
 	}
 
 	void update() {
 		map->renderMap(SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE);
-		renderUnits();
+		callUnits();
+
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 };

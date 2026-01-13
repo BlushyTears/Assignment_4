@@ -85,7 +85,6 @@ struct Map {
 				DrawRectangle(tile.positionX, tile.positionY, _tileSize, _tileSize, GRAY);
 			}
 			else {
-				std::cout << "tile should be visible" << std::endl;
 				DrawRectangle(tile.positionX, tile.positionY, _tileSize, _tileSize, tile.tileColor);
 			}
 		}

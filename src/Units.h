@@ -6,6 +6,15 @@
 #include <iostream>
 #include <vector>
 
+#include <random>
+
+inline int getRandomNumber(int min, int max) {
+	std::random_device dev;
+	std::mt19937 rng(dev());
+	std::uniform_int_distribution<std::mt19937::result_type> dist6(min, max);
+	return dist6(rng);
+}
+
 enum Behaviors {
 	Seek,
 	Wander
@@ -39,7 +48,7 @@ struct UnitBase {
 	Vector2 targetPos;
 	// All units should be equally big so it's hard coded here
 	int size = 3;
-	float unitSpeed = 0.1f;
+	float unitSpeed = 0.005f;
 	const int TILE_SIZE = 10;
 
 	Map* mapReference = nullptr;
@@ -55,30 +64,30 @@ struct UnitBase {
 
 	void testTile();
 
-	virtual void renderWorker() = 0;
-	void moveUnit() {
-		if (Vector2Distance(pos, targetPos) > 1) {
-			Vector2 dir = targetPos - pos;
-			pos += dir * unitSpeed;
-		}
-		//else {
-		//	targetPos.x = 400;
-		//	targetPos.y = 400;
-		//}
+	virtual void renderUnit() = 0;
+	virtual void moveUnit() = 0;
+
+	void moveUnitTowardsInternalGoal() {
+		Vector2 dir = targetPos - pos;
+		pos += dir * unitSpeed;
 	}
 };
 
 // Scout can be created with 1 worker
 struct Scout : UnitBase {
 	Scout(int _x, int _y, Map* _mp) : UnitBase(_x, _y, _mp) {}
-	void renderWorker() {
-		DrawCircle(pos.x, pos.y, size, RED);
+	void renderUnit() {
+		DrawCircle(pos.x, pos.y, size, BLUE);
 	}
+
+	void moveUnit();
 };
 
 struct Worker : UnitBase {
 	Worker(int _x, int _y, Map* _mp) : UnitBase(_x, _y, _mp) {}
-	void renderWorker() {
+
+	void moveUnit();
+	void renderUnit() {
 		DrawCircle(pos.x, pos.y, size, RED);
 	}
 };
