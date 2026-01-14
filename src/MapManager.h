@@ -24,16 +24,15 @@ enum TileType {
 };
 
 struct Tile {
-	int positionX;
-	int positionY;
+	Vector2 position;
 	bool hasBeenScouted = false;
 
 	TileType tileType = Grass;
 	Color tileColor;
 
 	Tile(int _x, int _y) {
-		positionX = _x;
-		positionY = _y;
+		position.x = _x;
+		position.y = _y;
 	}
 	bool isUnitWithinTile(const UnitBase& unit, int perimiterCheck);
 };
@@ -64,7 +63,7 @@ struct Map {
 					tempTile.tileColor = { 50, 50, 255, 255 };
 				}
 				else if (line[col] == 'G') {
-					tempTile.tileColor = { 255, 50, 100, 255 };
+					tempTile.tileColor = { 10, 235, 10, 255 };
 				}
 				else if (line[col] == 'B') {
 					tempTile.tileColor = { 50, 50, 50, 255 };
@@ -78,14 +77,21 @@ struct Map {
 		}
 	}
 
+	// Called sequentially to reduce overhead even if it limits the possible tiles some
+	void updateScoutedMapData() {
+		if (renderedTiles.size() >= accessableTiles->scoutedPaths.size() + 100) {
+			accessableTiles->computeNeighboors(accessableTiles->scoutedPaths, accessableTiles->ScoutedPathsNeighboors);
+		}
+	}
+
 	void renderMap(int _screenWidth, int _screenHeight, int _tileSize) {
 		// make this const reference whenever other thing runs im working on
 		for (auto const& tile : renderedTiles) {
 			if (!tile.hasBeenScouted) {
-				DrawRectangle(tile.positionX, tile.positionY, _tileSize, _tileSize, GRAY);
+				DrawRectangle(tile.position.x, tile.position.y, _tileSize, _tileSize, GRAY);
 			}
 			else {
-				DrawRectangle(tile.positionX, tile.positionY, _tileSize, _tileSize, tile.tileColor);
+				DrawRectangle(tile.position.x, tile.position.y, _tileSize, _tileSize, tile.tileColor);
 			}
 		}
 	}

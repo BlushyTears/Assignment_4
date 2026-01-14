@@ -91,9 +91,10 @@ struct Graph {
 };
 
 struct ChartedMap {
-    std::vector<Vector2> walkablePaths;
-    std::vector<std::vector<int>> neighboors;
-    std::vector<Connection> shortestPath;
+    std::vector<Vector2> scoutedPaths; // is it possible to walk here?
+    std::vector<Vector2> walkablePaths; // is it possible to walk here?
+    std::vector<std::vector<int>> walkablePathsNeighboors;
+    std::vector<std::vector<int>> ScoutedPathsNeighboors;
 
     int tileSize;
     float xAccumulator;
@@ -102,8 +103,8 @@ struct ChartedMap {
     // This map sets up everything related to everything non-algorithmic-related
     ChartedMap(std::string mapData, int _tileSize) {
         xAccumulator = 0;
-        yAccumulator = 50;
         tileSize = _tileSize;
+        yAccumulator = tileSize;
 
         for (int i = 0; i < mapData.length(); i++) {
             xAccumulator += tileSize;
@@ -120,8 +121,9 @@ struct ChartedMap {
             }
         }
 
-        shortestPath.reserve(10000);
-        computeNeighboors();
+        computeNeighboors(walkablePaths, walkablePathsNeighboors);
+        //ScoutedPathsNeighboors.resize(scoutedPaths.size() * 4);
+        //walkablePathsNeighboors.resize(walkablePaths.size() * 4);
     }
 
     NodeRecord getSmallestNodeByCost(std::vector<NodeRecord>& list) {
@@ -148,8 +150,8 @@ struct ChartedMap {
         return sqrtf(pow((goal.x - nodeRecord.node.x), 2) + pow((goal.y - nodeRecord.node.y), 2));
     }
 
-    std::vector<Connection> AStar(Vector2& start, Vector2& goal) {
-        Graph graph(walkablePaths);
+    std::vector<Connection> AStar(Vector2& start, Vector2& goal, std::vector<Vector2>& pathType, std::vector<std::vector<int>>& neighbooringNodes) {
+        Graph graph(pathType);
 
         NodeRecord startRecord;
         startRecord.node = Node{ (int)start.x, (int)start.y };
@@ -169,7 +171,7 @@ struct ChartedMap {
             if (current.node.x == goal.x && current.node.y == goal.y) {
                 break;
             }
-            std::vector<Connection> connections = graph.getConnections(current.node, neighboors);
+            std::vector<Connection> connections = graph.getConnections(current.node, neighbooringNodes);
             int endNodeHeuristic = 1;
 
             for (auto& connection : connections) {
@@ -237,8 +239,8 @@ struct ChartedMap {
         return path;
     }
 
-    std::vector<Connection> dijkstra(Vector2& start, Vector2& goal) {
-        Graph graph(walkablePaths);
+    std::vector<Connection> dijkstra(Vector2& start, Vector2& goal, std::vector<Vector2>& pathType, std::vector<std::vector<int>>& neighbooringNodes) {
+        Graph graph(pathType);
 
         NodeRecord startRecord;
         startRecord.node = Node{ (int)start.x, (int)start.y };
@@ -258,7 +260,7 @@ struct ChartedMap {
                 break;
             }
 
-            std::vector<Connection> connections = graph.getConnections(current.node, neighboors);
+            std::vector<Connection> connections = graph.getConnections(current.node, neighbooringNodes);
 
             for (auto& connection : connections) {
                 Node endNode = connection.getToNode();
@@ -315,44 +317,45 @@ struct ChartedMap {
         return path;
     }
 
-    void computeNeighboors() {
-        neighboors.resize(walkablePaths.size() * 4);
+    void computeNeighboors(std::vector<Vector2>& pathType, std::vector<std::vector<int>>& neighbooringNodes) {
+        neighbooringNodes.clear();
+        neighbooringNodes.resize(pathType.size() * 4);
 
-        for (int i = 0; i < walkablePaths.size(); i++) {
-            for (int j = 0; j < walkablePaths.size(); j++) {
+        for (int i = 0; i < pathType.size(); i++) {
+            for (int j = 0; j < pathType.size(); j++) {
                 if (i == j) continue;
 
-                int dx = walkablePaths[j].x - walkablePaths[i].x;
-                int dy = walkablePaths[j].y - walkablePaths[i].y;
+                int dx = pathType[j].x - pathType[i].x;
+                int dy = pathType[j].y - pathType[i].y;
 
                 bool isHorizontal = (abs(dx) == tileSize && dy == 0);
                 bool isVertical = (abs(dy) == tileSize && dx == 0);
                 bool isDiagonal = (abs(dx) == tileSize && abs(dy) == tileSize);
 
                 if (isHorizontal || isVertical) {
-                    neighboors[i].push_back(j);
+                    neighbooringNodes[i].push_back(j);
                     continue;
                 }
 
                 if (isDiagonal) {
-                    int bx = walkablePaths[i].x + dx;
-                    int by = walkablePaths[i].y;
+                    int bx = pathType[i].x + dx;
+                    int by = pathType[i].y;
 
-                    int cx = walkablePaths[i].x;
-                    int cy = walkablePaths[i].y + dy;
+                    int cx = pathType[i].x;
+                    int cy = pathType[i].y + dy;
 
                     bool horizontalExists = false;
                     bool verticalExists = false;
 
-                    for (int k = 0; k < walkablePaths.size(); k++) {
-                        if (walkablePaths[k].x == bx && walkablePaths[k].y == by)
+                    for (int k = 0; k < pathType.size(); k++) {
+                        if (pathType[k].x == bx && pathType[k].y == by)
                             horizontalExists = true;
-                        if (walkablePaths[k].x == cx && walkablePaths[k].y == cy)
+                        if (pathType[k].x == cx && pathType[k].y == cy)
                             verticalExists = true;
                     }
 
                     if (horizontalExists && verticalExists) {
-                        neighboors[i].push_back(j);
+                        neighbooringNodes[i].push_back(j);
                     }
                 }
             }

@@ -24,6 +24,7 @@ struct Agent;
 struct Object;
 struct Map;
 struct Tile;
+struct Connection;
 
 struct MovementBehavior {
 	virtual ~MovementBehavior() = default;
@@ -48,10 +49,12 @@ struct UnitBase {
 	Vector2 targetPos;
 	// All units should be equally big so it's hard coded here
 	int size = 3;
-	float unitSpeed = 0.005f;
+	float unitSpeed = 2.5f;
 	const int TILE_SIZE = 10;
 
 	Map* mapReference = nullptr;
+	int connectionIdx = 0;
+	std::vector<Connection> currentPath;
 
 	float rotationSmoothness;
 	float orientation;
@@ -63,12 +66,12 @@ struct UnitBase {
 	UnitBase(int _x, int _y, Map* _mp);
 
 	void testTile();
-
+	int getCorrespondingTile(std::vector<Vector2>& pathToCheck);
 	virtual void renderUnit() = 0;
 	virtual void moveUnit() = 0;
 
 	void moveUnitTowardsInternalGoal() {
-		Vector2 dir = targetPos - pos;
+		Vector2 dir = Vector2Normalize(targetPos - pos);
 		pos += dir * unitSpeed;
 	}
 };

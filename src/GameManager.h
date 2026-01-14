@@ -15,6 +15,7 @@ constexpr int SCREEN_WIDTH = 1000;
 constexpr int SCREEN_HEIGHT = 1200;
 constexpr int TILE_SIZE = 10;
 
+// Purpose of Game manager: Manage everything game-related such as positions of things, , instantiations of other componenents etc
 struct Game {
 	stringstream mapData;
 	Map* map = nullptr; // todo: turn into smart pointer
@@ -23,8 +24,8 @@ struct Game {
 	int initialFormationColumns = 11;
 	int xCount = 1;
 	int yCount = 1;
-	int baseXSpawn = 80;
-	int baseYSpawn = 200;
+	int baseXUnitSpawn = 80;
+	int baseYUnitSpawn = 200;
 	int spacing = 10;
 
 	Game(int _initialUnits) {
@@ -37,17 +38,17 @@ struct Game {
 				yCount++;
 			}
 
-			if (i % 2 == 0) {
-				units.push_back(std::make_unique<Worker>(
-					baseXSpawn + (spacing * xCount),
-					baseYSpawn + (spacing * yCount),
+			if (i % 25 == 0) {
+				units.push_back(std::make_unique<Scout>(
+					baseXUnitSpawn + (spacing * xCount),
+					baseYUnitSpawn + (spacing * yCount),
 					map));
 				xCount++;
 			}
 			else {
-				units.push_back(std::make_unique<Scout>(
-					baseXSpawn + (spacing * xCount),
-					baseYSpawn + (spacing * yCount),
+				units.push_back(std::make_unique<Worker>(
+					baseXUnitSpawn + (spacing * xCount),
+					baseYUnitSpawn + (spacing * yCount),
 					map));
 				xCount++;
 			}
@@ -65,6 +66,7 @@ struct Game {
 	}
 
 	void update() {
+		map->updateScoutedMapData();
 		map->renderMap(SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE);
 		callUnits();
 
