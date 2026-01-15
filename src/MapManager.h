@@ -48,7 +48,6 @@ struct Map {
 	//}
 
 	Map(stringstream& ss, int _screenWidth, int _tileSize) {
-		renderedTiles.reserve(10000);
 		accessableTiles = new ChartedMap(ss.str(), _tileSize);
 
 		string line;
@@ -79,7 +78,8 @@ struct Map {
 
 	// Called sequentially to reduce overhead even if it limits the possible tiles some
 	void updateScoutedMapData() {
-		if (renderedTiles.size() >= accessableTiles->scoutedPaths.size() + 100) {
+		if (accessableTiles->scoutedPaths.size() % 100 == 0) {
+			//std::cout << "Update neighboors, rendered tiles: " << accessableTiles->scoutedPaths.size() << std::endl;
 			accessableTiles->computeNeighboors(accessableTiles->scoutedPaths, accessableTiles->ScoutedPathsNeighboors);
 		}
 	}

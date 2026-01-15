@@ -38,7 +38,7 @@ struct Game {
 				yCount++;
 			}
 
-			if (i % 25 == 0) {
+			if (i % 15 == 0) {
 				units.push_back(std::make_unique<Scout>(
 					baseXUnitSpawn + (spacing * xCount),
 					baseYUnitSpawn + (spacing * yCount),
@@ -65,7 +65,16 @@ struct Game {
 		}
 	}
 
+	void debugText() {
+		int fps = GetFPS();
+		string fpsString = to_string(fps);
+		const char* fpsChar = fpsString.c_str();
+		DrawText(fpsChar, 20, 1050, 24, GREEN);
+	}
+
 	void update() {
+		debugText();
+
 		map->updateScoutedMapData();
 		map->renderMap(SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE);
 		callUnits();

@@ -51,6 +51,7 @@ struct UnitBase {
 	int size = 3;
 	float unitSpeed = 2.5f;
 	const int TILE_SIZE = 10;
+	int currentTileIdx = 0;
 
 	Map* mapReference = nullptr;
 	int connectionIdx = 0;
@@ -66,7 +67,7 @@ struct UnitBase {
 	UnitBase(int _x, int _y, Map* _mp);
 
 	void testTile();
-	int getCorrespondingTile(std::vector<Vector2>& pathToCheck);
+	int getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck);
 	virtual void renderUnit() = 0;
 	virtual void moveUnit() = 0;
 

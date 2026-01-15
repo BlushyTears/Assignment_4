@@ -75,6 +75,8 @@ struct Graph {
 
 	std::vector<Connection> getConnections(const Node& n, const std::vector<std::vector<int>>& neighboors) {
 		std::vector<Connection> out;
+        if (neighboors.size() == 0)
+            return out;
 		for (int i = 0; i < chartedGraph.size(); i++) {
 			if (chartedGraph[i].node == n) {
 				for (int idx : neighboors[i]) {
@@ -122,8 +124,6 @@ struct ChartedMap {
         }
 
         computeNeighboors(walkablePaths, walkablePathsNeighboors);
-        //ScoutedPathsNeighboors.resize(scoutedPaths.size() * 4);
-        //walkablePathsNeighboors.resize(walkablePaths.size() * 4);
     }
 
     NodeRecord getSmallestNodeByCost(std::vector<NodeRecord>& list) {

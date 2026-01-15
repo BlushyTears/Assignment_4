@@ -21,16 +21,25 @@ void UnitBase::testTile() {
 	}
 }
 
-int UnitBase::getCorrespondingTile(std::vector<Vector2>& pathToCheck) {
-	auto walkablePathsRef = mapReference->accessableTiles->walkablePaths;
+
+// slow but accurate
+int UnitBase::getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck) {
+	if (pathToCheck.empty())
+		return 0;
+
+	float minDist = std::numeric_limits<float>::max();
+	int closestIdx = 0;
 
 	for (int i = 0; i < pathToCheck.size(); i++) {
-		if (pos.x >= pathToCheck[i].x && pos.x < pathToCheck[i].x + TILE_SIZE &&
-			pos.y >= pathToCheck[i].y && pos.y < pathToCheck[i].y + TILE_SIZE) {
-			return i;
+		float dist = Vector2Distance(pos, pathToCheck[i]);
+
+		if (dist < minDist) {
+			minDist = dist;
+			closestIdx = i;
 		}
 	}
-	return 0;
+
+	return closestIdx;
 }
 
 // Calculate path first, only then do we calculate next position
@@ -41,9 +50,10 @@ void Scout::moveUnit() {
 	if (currentPath.size() == 0) {
 		auto ref = mapReference->accessableTiles;
 		int randomNodeIdx = getRandomNumber(0, ref->walkablePaths.size() - 1);
-		int tileIdx = getCorrespondingTile(mapReference->accessableTiles->walkablePaths);
+		currentTileIdx = getcurrentCorrespondingTile(mapReference->accessableTiles->walkablePaths);
+
 		currentPath = ref->dijkstra(
-			ref->walkablePaths[tileIdx],
+			ref->walkablePaths[currentTileIdx],
 			ref->walkablePaths[randomNodeIdx],
 			ref->walkablePaths,
 			ref->walkablePathsNeighboors);
@@ -72,12 +82,19 @@ void Worker::moveUnit() {
 	// We start with an empty path
 	//std::cout << "path size: " << currentPath.size() << std::endl;
 
+	int scoutPathCount = mapReference->accessableTiles->scoutedPaths.size();
+	string stringThing = "Scouted Path count: " + to_string(scoutPathCount);
+	const char* charThing = stringThing.c_str();
+	DrawText(charThing, 20, 1150, 24, PURPLE);
+
 	auto ref = mapReference->accessableTiles;
 	if (currentPath.size() == 0 && ref->scoutedPaths.size() >= 1) {
 		int randomNodeIdx = getRandomNumber(0, ref->scoutedPaths.size() - 1);
-		int tileIdx = getCorrespondingTile(mapReference->accessableTiles->scoutedPaths);
+
+		currentTileIdx = getcurrentCorrespondingTile(mapReference->accessableTiles->scoutedPaths);
+
 		currentPath = ref->AStar(
-			ref->scoutedPaths[tileIdx],
+			ref->scoutedPaths[currentTileIdx],
 			ref->scoutedPaths[randomNodeIdx],
 			ref->scoutedPaths,
 			ref->ScoutedPathsNeighboors);
@@ -89,9 +106,12 @@ void Worker::moveUnit() {
 		}
 		// we hit our next goal
 		if (Vector2Distance(pos, targetPos) < 5) {
-			connectionIdx++;
-			targetPos.x = (float)currentPath[connectionIdx].toNode.x;
-			targetPos.y = (float)currentPath[connectionIdx].toNode.y;
+			if (connectionIdx + 1 < currentPath.size()) {
+				targetPos.x = (float)currentPath[connectionIdx].toNode.x;
+				targetPos.y = (float)currentPath[connectionIdx].toNode.y;
+				connectionIdx++;
+			}
+
 		}
 		// we reached the end of our path, so therefore reset and make new path
 		if (connectionIdx >= currentPath.size() - 1) {
