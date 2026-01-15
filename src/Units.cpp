@@ -21,7 +21,6 @@ void UnitBase::testTile() {
 	}
 }
 
-
 // slow but accurate
 int UnitBase::getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck) {
 	if (pathToCheck.empty())

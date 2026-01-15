@@ -321,6 +321,8 @@ struct ChartedMap {
         neighbooringNodes.clear();
         neighbooringNodes.resize(pathType.size() * 4);
 
+
+
         for (int i = 0; i < pathType.size(); i++) {
             for (int j = 0; j < pathType.size(); j++) {
                 if (i == j) continue;

@@ -26,23 +26,23 @@ struct Map;
 struct Tile;
 struct Connection;
 
-struct MovementBehavior {
-	virtual ~MovementBehavior() = default;
-	virtual void execute(Agent& agent, Object* player) = 0;
-};
-
-struct SeekBehavior : MovementBehavior {
-	virtual Vector2 getTargetDirection(Agent& agent, Object* player);
-	void execute(Agent& agent, Object* player) override;
-};
-
-struct WanderBehavior : MovementBehavior {
-	float wanderOrientation = 1.0f;
-	float wanderOffset = 250;
-	float wanderRadius = 35;
-	float wanderRate = 1.0f;
-	void execute(Agent& agent, Object* player) override;
-};
+//struct MovementBehavior {
+//	virtual ~MovementBehavior() = default;
+//	virtual void execute(Agent& agent, Object* player) = 0;
+//};
+//
+//struct SeekBehavior : MovementBehavior {
+//	virtual Vector2 getTargetDirection(Agent& agent, Object* player);
+//	void execute(Agent& agent, Object* player) override;
+//};
+//
+//struct WanderBehavior : MovementBehavior {
+//	float wanderOrientation = 1.0f;
+//	float wanderOffset = 250;
+//	float wanderRadius = 35;
+//	float wanderRate = 1.0f;
+//	void execute(Agent& agent, Object* player) override;
+//};
 
 struct UnitBase {
 	Vector2 pos;
