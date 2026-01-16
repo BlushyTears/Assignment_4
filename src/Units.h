@@ -26,30 +26,12 @@ struct Map;
 struct Tile;
 struct Connection;
 
-//struct MovementBehavior {
-//	virtual ~MovementBehavior() = default;
-//	virtual void execute(Agent& agent, Object* player) = 0;
-//};
-//
-//struct SeekBehavior : MovementBehavior {
-//	virtual Vector2 getTargetDirection(Agent& agent, Object* player);
-//	void execute(Agent& agent, Object* player) override;
-//};
-//
-//struct WanderBehavior : MovementBehavior {
-//	float wanderOrientation = 1.0f;
-//	float wanderOffset = 250;
-//	float wanderRadius = 35;
-//	float wanderRate = 1.0f;
-//	void execute(Agent& agent, Object* player) override;
-//};
-
 struct UnitBase {
 	Vector2 pos;
 	Vector2 targetPos;
 	// All units should be equally big so it's hard coded here
 	int size = 3;
-	float unitSpeed = 2.5f;
+	float unitSpeed = 0.5f;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
 
@@ -57,19 +39,20 @@ struct UnitBase {
 	int connectionIdx = 0;
 	std::vector<Connection> currentPath;
 
-	float rotationSmoothness;
-	float orientation;
-	Vector2 rotation;
-	Vector2 forwardDirection;
-
 	std::vector<Tile>* renderedTiles;
 
 	UnitBase(int _x, int _y, Map* _mp);
+	bool isAwaitingNewPath = false;
 
 	void testTile();
+	void AwaitNewPath();
 	int getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck);
 	virtual void renderUnit() = 0;
 	virtual void moveUnit() = 0;
+
+	virtual void calculateNewPath() {
+		isAwaitingNewPath = false;
+	};
 
 	void moveUnitTowardsInternalGoal() {
 		Vector2 dir = Vector2Normalize(targetPos - pos);
@@ -83,15 +66,16 @@ struct Scout : UnitBase {
 	void renderUnit() {
 		DrawCircle(pos.x, pos.y, size, BLUE);
 	}
-
+	void calculateNewPath() override;
 	void moveUnit();
 };
 
 struct Worker : UnitBase {
 	Worker(int _x, int _y, Map* _mp) : UnitBase(_x, _y, _mp) {}
 
-	void moveUnit();
+	void moveUnit() override;
 	void renderUnit() {
 		DrawCircle(pos.x, pos.y, size, RED);
-	}
+	};
+	void calculateNewPath() override;
 };

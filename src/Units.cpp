@@ -4,12 +4,22 @@
 
 #include <iostream>
 
+
 UnitBase::UnitBase(int _x, int _y, Map* _mp) {
 	pos.x = _x;
 	pos.y = _y;
 	targetPos = pos;
 	mapReference = _mp;
 	renderedTiles = &mapReference->renderedTiles;
+}
+
+void UnitBase::AwaitNewPath()
+{
+	if (isAwaitingNewPath)
+		return;
+
+	mapReference->searchQueue.emplace(this);
+	isAwaitingNewPath = true;
 }
 
 void UnitBase::testTile() {
@@ -41,21 +51,27 @@ int UnitBase::getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck) {
 	return closestIdx;
 }
 
+void Scout::calculateNewPath() {
+	auto ref = mapReference->accessableTiles;
+	int randomNodeIdx = getRandomNumber(0, ref->walkablePaths.size() - 1);
+	currentTileIdx = getcurrentCorrespondingTile(mapReference->accessableTiles->walkablePaths);
+
+	currentPath = ref->AStar(
+		ref->walkablePaths[currentTileIdx],
+		ref->walkablePaths[randomNodeIdx],
+		ref->walkablePaths,
+		ref->walkablePathsNeighboors);
+
+	UnitBase::calculateNewPath();
+}
+
 // Calculate path first, only then do we calculate next position
 void Scout::moveUnit() {
 	// We start with an empty path
 	//std::cout << "path size " << currentPath.size() << std::endl;
 
 	if (currentPath.size() == 0) {
-		auto ref = mapReference->accessableTiles;
-		int randomNodeIdx = getRandomNumber(0, ref->walkablePaths.size() - 1);
-		currentTileIdx = getcurrentCorrespondingTile(mapReference->accessableTiles->walkablePaths);
-
-		currentPath = ref->dijkstra(
-			ref->walkablePaths[currentTileIdx],
-			ref->walkablePaths[randomNodeIdx],
-			ref->walkablePaths,
-			ref->walkablePathsNeighboors);
+		AwaitNewPath();
 	}
 	else {
 		// Casually move toward targetPos
@@ -77,6 +93,20 @@ void Scout::moveUnit() {
 	}
 }
 
+void Worker::calculateNewPath() {
+	int randomNodeIdx = getRandomNumber(0, mapReference->accessableTiles->scoutedPaths.size() - 1);
+
+	currentTileIdx = getcurrentCorrespondingTile(mapReference->accessableTiles->scoutedPaths);
+
+	currentPath = mapReference->accessableTiles->AStar(
+		mapReference->accessableTiles->scoutedPaths[currentTileIdx],
+		mapReference->accessableTiles->scoutedPaths[randomNodeIdx],
+		mapReference->accessableTiles->scoutedPaths,
+		mapReference->accessableTiles->ScoutedPathsNeighboors);
+
+	UnitBase::calculateNewPath();
+}
+
 void Worker::moveUnit() {
 	// We start with an empty path
 	//std::cout << "path size: " << currentPath.size() << std::endl;
@@ -88,15 +118,7 @@ void Worker::moveUnit() {
 
 	auto ref = mapReference->accessableTiles;
 	if (currentPath.size() == 0 && ref->scoutedPaths.size() >= 1) {
-		int randomNodeIdx = getRandomNumber(0, ref->scoutedPaths.size() - 1);
-
-		currentTileIdx = getcurrentCorrespondingTile(mapReference->accessableTiles->scoutedPaths);
-
-		currentPath = ref->AStar(
-			ref->scoutedPaths[currentTileIdx],
-			ref->scoutedPaths[randomNodeIdx],
-			ref->scoutedPaths,
-			ref->ScoutedPathsNeighboors);
+		AwaitNewPath();
 	}
 	else {
 		/// Casually move toward targetPos

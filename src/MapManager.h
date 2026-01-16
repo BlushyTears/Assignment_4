@@ -82,11 +82,31 @@ struct Tile {
 struct Map {
 	std::vector<Tile> renderedTiles;
 	ChartedMap* accessableTiles; // TODO: Make this a smart pointer
-	//std::vector<Connection> thing = ChartedMap.AStar();
 
+	std::vector<int> treeIndices; // Future tech for finding trees without looping through all tiles
 	std::vector<int> ironOreIndices; // Future tech for finding ores without looping through all tiles
 
+	std::queue<UnitBase*> searchQueue; // Units that want to search the map currently.
+
 	int mapTileSize;
+
+	int getNearestTreeIdx(UnitBase& unit) {
+		int minDist = std::numeric_limits<int>::max();
+		int treeIdx = 0;
+
+		for (int i = 0; i < treeIndices.size(); i++) {
+			int dist = abs(Vector2Length(renderedTiles[i].position - unit.pos));
+			if (dist < minDist) {
+				minDist = dist;
+				treeIdx = i;
+			}
+		}
+		return treeIdx;
+	}
+
+	//int getNearestOreIdx(UnitBase& unit) {
+
+	//}
 
 	Map(stringstream& ss, int _screenWidth, int _tileSize) {
 		accessableTiles = new ChartedMap(ss.str(), _tileSize);
@@ -102,6 +122,7 @@ struct Map {
 					tempTile.tileColor = { 50, 255, 50, 100 };
 					tempTile.tileType = Trees;
 					tempTile.spawnTrees(mapTileSize);
+					treeIndices.push_back(col);
 				}
 				else if (line[col] == 'V') {
 					tempTile.tileColor = { 50, 50, 255, 255 };
@@ -156,8 +177,9 @@ struct Map {
 	}
 
 	// Called sequentially to reduce overhead even if it limits the possible tiles some
+	// Todo: computeNeighboors itself should be updated incrementally instead of the whole thing
 	void updateScoutedMapData() {
-		if (accessableTiles->scoutedPaths.size() % 100 == 0) {
+		if (accessableTiles->scoutedPaths.size() % 50 == 0) {
 			//std::cout << "Update neighboors, rendered tiles: " << accessableTiles->scoutedPaths.size() << std::endl;
 			accessableTiles->computeNeighboors(accessableTiles->scoutedPaths, accessableTiles->ScoutedPathsNeighboors);
 		}

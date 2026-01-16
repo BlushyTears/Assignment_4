@@ -122,7 +122,6 @@ struct ChartedMap {
                 xAccumulator = 0;
             }
         }
-
         computeNeighboors(walkablePaths, walkablePathsNeighboors);
     }
 
@@ -159,7 +158,7 @@ struct ChartedMap {
         startRecord.connection = Connection();
         startRecord.estimatedTotalCost = euclidianDistance(startRecord, start, goal);
 
-        std::vector<NodeRecord> openList;
+        std::vector<NodeRecord> openList = std::vector<NodeRecord>(graph.chartedGraph.size());
         openList.push_back(startRecord);
         std::vector<NodeRecord> closedList;
 
@@ -320,8 +319,6 @@ struct ChartedMap {
     void computeNeighboors(std::vector<Vector2>& pathType, std::vector<std::vector<int>>& neighbooringNodes) {
         neighbooringNodes.clear();
         neighbooringNodes.resize(pathType.size() * 4);
-
-
 
         for (int i = 0; i < pathType.size(); i++) {
             for (int j = 0; j < pathType.size(); j++) {
