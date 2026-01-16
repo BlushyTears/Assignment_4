@@ -81,7 +81,9 @@ struct Tile {
 
 struct Map {
 	std::vector<Tile> renderedTiles;
-	ChartedMap* accessableTiles; // TODO: Make this a smart pointer
+	std::vector<Vector2> renderedTilesPositions; // initial positions that we want the workers to use for path finding
+	ChartedMap* accessableTiles = nullptr;
+	ChartedMap* scoutedTiles = nullptr;
 
 	std::vector<int> treeIndices; // Future tech for finding trees without looping through all tiles
 	std::vector<int> ironOreIndices; // Future tech for finding ores without looping through all tiles
@@ -141,10 +143,12 @@ struct Map {
 					tempTile.tileType = Grass;
 				}
 				renderedTiles.push_back(tempTile);
+				renderedTilesPositions.push_back(tempTile.position);
 			}
 			row++;
 		}
 
+		scoutedTiles = new ChartedMap(renderedTilesPositions);
 		spawnIronOre();
 	}
 	void spawnIronOre() {
@@ -179,10 +183,10 @@ struct Map {
 	// Called sequentially to reduce overhead even if it limits the possible tiles some
 	// Todo: computeNeighboors itself should be updated incrementally instead of the whole thing
 	void updateScoutedMapData() {
-		if (accessableTiles->scoutedPaths.size() % 50 == 0) {
-			//std::cout << "Update neighboors, rendered tiles: " << accessableTiles->scoutedPaths.size() << std::endl;
-			accessableTiles->computeNeighboors(accessableTiles->scoutedPaths, accessableTiles->ScoutedPathsNeighboors);
-		}
+		//if (accessableTiles->scoutedPaths.size() % 50 == 0) {
+		//	//std::cout << "Update neighboors, rendered tiles: " << accessableTiles->scoutedPaths.size() << std::endl;
+		//	accessableTiles->computeNeighboors(accessableTiles->scoutedPaths, accessableTiles->ScoutedPathsNeighboors);
+		//}
 	}
 
 	void renderMap(int _screenWidth, int _screenHeight, int _tileSize) {

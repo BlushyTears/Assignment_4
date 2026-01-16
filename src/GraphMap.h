@@ -13,6 +13,8 @@
 #include <queue>
 #include <chrono>
 
+#include "MapManager.h"
+
 struct Node {
 	int x;
 	int y;
@@ -32,7 +34,6 @@ struct NodeRecord {
 	Node node;
 	Connection connection;
 	int costSoFar{ INT_MAX };
-	// Below is just for aStar
 	int estimatedTotalCost;
 
 	int getCostSoFar() {
@@ -93,14 +94,21 @@ struct Graph {
 };
 
 struct ChartedMap {
-    std::vector<Vector2> scoutedPaths; // is it possible to walk here?
-    std::vector<Vector2> walkablePaths; // is it possible to walk here?
+    Graph* graph = nullptr;
+    std::vector<Vector2> walkablePaths;
     std::vector<std::vector<int>> walkablePathsNeighboors;
-    std::vector<std::vector<int>> ScoutedPathsNeighboors;
+    std::vector<NodeRecord> openList;
 
     int tileSize;
     float xAccumulator;
     float yAccumulator;
+
+    ChartedMap(std::vector<Vector2> preComputedPositions) {
+        for (auto& tile : preComputedPositions) {
+            walkablePaths.push_back(tile);
+        }
+        computeNeighboors();
+    }
 
     // This map sets up everything related to everything non-algorithmic-related
     ChartedMap(std::string mapData, int _tileSize) {
@@ -110,7 +118,6 @@ struct ChartedMap {
 
         for (int i = 0; i < mapData.length(); i++) {
             xAccumulator += tileSize;
-
             if (mapData[i] == 'G') {
                 walkablePaths.push_back({ xAccumulator , yAccumulator });
             }
@@ -122,7 +129,9 @@ struct ChartedMap {
                 xAccumulator = 0;
             }
         }
-        computeNeighboors(walkablePaths, walkablePathsNeighboors);
+        computeNeighboors();
+        graph = new Graph(walkablePaths);
+        openList = std::vector<NodeRecord>(graph->chartedGraph.size());
     }
 
     NodeRecord getSmallestNodeByCost(std::vector<NodeRecord>& list) {
@@ -149,16 +158,14 @@ struct ChartedMap {
         return sqrtf(pow((goal.x - nodeRecord.node.x), 2) + pow((goal.y - nodeRecord.node.y), 2));
     }
 
-    std::vector<Connection> AStar(Vector2& start, Vector2& goal, std::vector<Vector2>& pathType, std::vector<std::vector<int>>& neighbooringNodes) {
-        Graph graph(pathType);
-
+    std::vector<Connection> AStar(Vector2& start, Vector2& goal, std::vector<std::vector<int>>& neighbooringNodes) {
         NodeRecord startRecord;
         startRecord.node = Node{ (int)start.x, (int)start.y };
         startRecord.costSoFar = 0;
         startRecord.connection = Connection();
         startRecord.estimatedTotalCost = euclidianDistance(startRecord, start, goal);
 
-        std::vector<NodeRecord> openList = std::vector<NodeRecord>(graph.chartedGraph.size());
+        openList.clear();
         openList.push_back(startRecord);
         std::vector<NodeRecord> closedList;
 
@@ -170,7 +177,11 @@ struct ChartedMap {
             if (current.node.x == goal.x && current.node.y == goal.y) {
                 break;
             }
-            std::vector<Connection> connections = graph.getConnections(current.node, neighbooringNodes);
+            auto tempIt = std::find(openList.begin(), openList.end(), current);
+            openList.erase(tempIt);
+            closedList.push_back(current);
+
+            std::vector<Connection> connections = graph->getConnections(current.node, neighbooringNodes);
             int endNodeHeuristic = 1;
 
             for (auto& connection : connections) {
@@ -189,7 +200,6 @@ struct ChartedMap {
                         continue;
 
                     closedList.erase(closedIt);
-
                     endNodeHeuristic = endNodeRecord.estimatedTotalCost - endNodeRecord.costSoFar;
                 }
                 else if (openIt != openList.end()) {
@@ -213,9 +223,6 @@ struct ChartedMap {
                     openList.push_back(endNodeRecord);
                 }
             }
-            auto tempIt = std::find(openList.begin(), openList.end(), current);
-            openList.erase(tempIt);
-            closedList.push_back(current);
         }
 
         std::vector<Connection> path;
@@ -227,9 +234,7 @@ struct ChartedMap {
                 auto it = std::find(closedList.begin(), closedList.end(), parrentNode);
 
                 if (it == closedList.end()) {
-                    if (parrentNode == startRecord.node) {
-                        break;
-                    }
+                    break;
                 }
                 current = *it;
             }
@@ -238,126 +243,60 @@ struct ChartedMap {
         return path;
     }
 
-    std::vector<Connection> dijkstra(Vector2& start, Vector2& goal, std::vector<Vector2>& pathType, std::vector<std::vector<int>>& neighbooringNodes) {
-        Graph graph(pathType);
-
-        NodeRecord startRecord;
-        startRecord.node = Node{ (int)start.x, (int)start.y };
-        startRecord.costSoFar = 0;
-        startRecord.connection = Connection();
-
-        std::vector<NodeRecord> openList;
-        openList.push_back(startRecord);
-        std::vector<NodeRecord> closedList;
-
-        NodeRecord current;
-
-        while (openList.size() > 0) {
-            current = getSmallestNodeByCost(openList);
-
-            if (current.node.x == goal.x && current.node.y == goal.y) {
-                break;
-            }
-
-            std::vector<Connection> connections = graph.getConnections(current.node, neighbooringNodes);
-
-            for (auto& connection : connections) {
-                Node endNode = connection.getToNode();
-
-                int endNodeCost = current.getCostSoFar() + connection.getCost();
-
-                NodeRecord endNodeRecord = NodeRecord();
-                if (std::find(closedList.begin(), closedList.end(), endNode) != closedList.end()) {
-                    continue;
-                }
-
-                auto it = std::find(openList.begin(), openList.end(), endNode);
-
-                // Is the endnodeRecord in open list
-                if (it != openList.end()) {
-                    endNodeRecord = *it;
-                    if (endNodeRecord.costSoFar <= endNodeCost) {
-                        continue;
-                    }
-                }
-                else {
-                    endNodeRecord.node = endNode;
-                }
-                endNodeRecord.costSoFar = endNodeCost;
-                endNodeRecord.connection = connection;
-
-                // is end node not in open list
-                if (std::find(openList.begin(), openList.end(), endNode) == openList.end()) {
-                    openList.push_back(endNodeRecord);
-                }
-            }
-            auto temp = std::find(openList.begin(), openList.end(), current);
-            openList.erase(temp);
-            closedList.push_back(current);
+    // as we unlock new tiles we probably wanna put them in the list
+    // only needs to loop through: walkablePaths.size() - 1;
+    void computeNewNeighboors(int i) {
+        if (walkablePathsNeighboors.size() <= i) {
+            walkablePathsNeighboors.resize(i + 1);
         }
 
-        std::vector<Connection> path;
-        if (current.node.x == goal.x && current.node.y == goal.y) {
-            while (current.node != startRecord.node) {
-                path.push_back(current.connection);
+        for (int j = 0; j < walkablePaths.size(); j++) {
+            if (i == j) continue;
 
-                Node parrentNode = current.connection.getFromNode();
-                auto it = std::find(closedList.begin(), closedList.end(), parrentNode);
+            int dx = walkablePaths[j].x - walkablePaths[i].x;
+            int dy = walkablePaths[j].y - walkablePaths[i].y;
 
-                if (it == closedList.end()) {
-                    if (parrentNode == startRecord.node) {
-                        break;
-                    }
-                }
-                current = *it;
+            bool isHorizontal = (abs(dx) == tileSize && dy == 0);
+            bool isVertical = (abs(dy) == tileSize && dx == 0);
+            bool isDiagonal = (abs(dx) == tileSize && abs(dy) == tileSize);
+
+            if (isHorizontal || isVertical) {
+                walkablePathsNeighboors[i].push_back(j);
+                continue;
             }
-            reverse(path.begin(), path.end());
+
+            if (isDiagonal) {
+                int bx = walkablePaths[i].x + dx;
+                int by = walkablePaths[i].y;
+
+                int cx = walkablePaths[i].x;
+                int cy = walkablePaths[i].y + dy;
+
+                bool horizontalExists = false;
+                bool verticalExists = false;
+
+                for (int k = 0; k < walkablePaths.size(); k++) {
+                    if (walkablePaths[k].x == bx && walkablePaths[k].y == by)
+                        horizontalExists = true;
+                    if (walkablePaths[k].x == cx && walkablePaths[k].y == cy)
+                        verticalExists = true;
+                }
+
+                if (horizontalExists && verticalExists) {
+                    walkablePathsNeighboors[i].push_back(j);
+
+                    //walkablePathsNeighboors[j].push_back(i);
+                }
+            }
         }
-        return path;
     }
 
-    void computeNeighboors(std::vector<Vector2>& pathType, std::vector<std::vector<int>>& neighbooringNodes) {
-        neighbooringNodes.clear();
-        neighbooringNodes.resize(pathType.size() * 4);
+    void computeNeighboors() {
+        walkablePathsNeighboors.clear();
+        walkablePathsNeighboors.resize(walkablePaths.size() * 4);
 
-        for (int i = 0; i < pathType.size(); i++) {
-            for (int j = 0; j < pathType.size(); j++) {
-                if (i == j) continue;
-
-                int dx = pathType[j].x - pathType[i].x;
-                int dy = pathType[j].y - pathType[i].y;
-
-                bool isHorizontal = (abs(dx) == tileSize && dy == 0);
-                bool isVertical = (abs(dy) == tileSize && dx == 0);
-                bool isDiagonal = (abs(dx) == tileSize && abs(dy) == tileSize);
-
-                if (isHorizontal || isVertical) {
-                    neighbooringNodes[i].push_back(j);
-                    continue;
-                }
-
-                if (isDiagonal) {
-                    int bx = pathType[i].x + dx;
-                    int by = pathType[i].y;
-
-                    int cx = pathType[i].x;
-                    int cy = pathType[i].y + dy;
-
-                    bool horizontalExists = false;
-                    bool verticalExists = false;
-
-                    for (int k = 0; k < pathType.size(); k++) {
-                        if (pathType[k].x == bx && pathType[k].y == by)
-                            horizontalExists = true;
-                        if (pathType[k].x == cx && pathType[k].y == cy)
-                            verticalExists = true;
-                    }
-
-                    if (horizontalExists && verticalExists) {
-                        neighbooringNodes[i].push_back(j);
-                    }
-                }
-            }
+        for (int i = 0; i < walkablePaths.size(); i++) {
+            computeNewNeighboors(i);
         }
     }
 };

@@ -25,6 +25,4 @@ struct TaskManager {
 	void delegateTasks() {
 	
 	}
-
-
 };

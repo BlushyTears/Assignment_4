@@ -20,8 +20,6 @@ enum Behaviors {
 	Wander
 };
 
-struct Agent;
-struct Object;
 struct Map;
 struct Tile;
 struct Connection;
