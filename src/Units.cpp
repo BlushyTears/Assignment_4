@@ -123,7 +123,6 @@ void Worker::moveUnit() {
 		// Casually move toward targetPos
 		if (Vector2Distance(pos, targetPos) > 10) {
 			moveUnitTowardsInternalGoal();
-			testTile();
 		}
 		// we hit our next goal
 		if (Vector2Distance(pos, targetPos) < 5) {
