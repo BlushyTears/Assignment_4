@@ -74,6 +74,18 @@ struct Graph {
 		}
 	}
 
+    void addLatestNodeToGraph(std::vector<Vector2>& paths) {
+        if (paths.empty()) {
+            return;
+        }
+
+        NodeRecord temp;
+        temp.node.x = paths.back().x;
+        temp.node.y = paths.back().y;
+        temp.costSoFar = INT_MAX;
+        chartedGraph.push_back(temp);
+    }
+
 	std::vector<Connection> getConnections(const Node& n, const std::vector<std::vector<int>>& neighboors) {
 		std::vector<Connection> out;
         if (neighboors.size() == 0)
@@ -99,15 +111,16 @@ struct ChartedMap {
     std::vector<std::vector<int>> walkablePathsNeighboors;
     std::vector<NodeRecord> openList;
 
-    int tileSize;
+    int tileSize = 10;
     float xAccumulator;
     float yAccumulator;
 
-    ChartedMap(std::vector<Vector2> preComputedPositions) {
-        for (auto& tile : preComputedPositions) {
-            walkablePaths.push_back(tile);
-        }
+    ChartedMap(int _tileSize) {
+        tileSize = _tileSize;
         computeNeighboors();
+        graph = new Graph(walkablePaths);
+        openList = std::vector<NodeRecord>(10000);
+        std::cout << "scouted map size: " << walkablePaths.size() << std::endl;
     }
 
     // This map sets up everything related to everything non-algorithmic-related
@@ -246,8 +259,9 @@ struct ChartedMap {
     // as we unlock new tiles we probably wanna put them in the list
     // only needs to loop through: walkablePaths.size() - 1;
     void computeNewNeighboors(int i) {
-        if (walkablePathsNeighboors.size() <= i) {
-            walkablePathsNeighboors.resize(i + 1);
+        // Resize to match walkablePaths size if needed
+        if (walkablePathsNeighboors.size() < walkablePaths.size()) {
+            walkablePathsNeighboors.resize(walkablePaths.size());
         }
 
         for (int j = 0; j < walkablePaths.size(); j++) {
@@ -262,6 +276,7 @@ struct ChartedMap {
 
             if (isHorizontal || isVertical) {
                 walkablePathsNeighboors[i].push_back(j);
+                walkablePathsNeighboors[j].push_back(i);
                 continue;
             }
 
@@ -284,8 +299,7 @@ struct ChartedMap {
 
                 if (horizontalExists && verticalExists) {
                     walkablePathsNeighboors[i].push_back(j);
-
-                    //walkablePathsNeighboors[j].push_back(i);
+                    walkablePathsNeighboors[j].push_back(i);
                 }
             }
         }

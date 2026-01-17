@@ -52,26 +52,26 @@ struct Game {
 				yCount++;
 			}
 
-			units.push_back(std::make_unique<Scout>(
-				baseXUnitSpawn + (spacing * xCount),
-				baseYUnitSpawn + (spacing * yCount),
-				map));
-			xCount++;
+			//units.push_back(std::make_unique<Scout>(
+			//	baseXUnitSpawn + (spacing * xCount),
+			//	baseYUnitSpawn + (spacing * yCount),
+			//	map));
+			//xCount++;
 
-			//if (i % 15 == 0) {
-			//	units.push_back(std::make_unique<Scout>(
-			//		baseXUnitSpawn + (spacing * xCount),
-			//		baseYUnitSpawn + (spacing * yCount),
-			//		map));
-			//	xCount++;
-			//}
-			//else {
-			//	units.push_back(std::make_unique<Worker>(
-			//		baseXUnitSpawn + (spacing * xCount),
-			//		baseYUnitSpawn + (spacing * yCount),
-			//		map));
-			//	xCount++;
-			//}
+			if (i % 15 == 0) {
+				units.push_back(std::make_unique<Scout>(
+					baseXUnitSpawn + (spacing * xCount),
+					baseYUnitSpawn + (spacing * yCount),
+					map));
+				xCount++;
+			}
+			else {
+				units.push_back(std::make_unique<Worker>(
+					baseXUnitSpawn + (spacing * xCount),
+					baseYUnitSpawn + (spacing * yCount),
+					map));
+				xCount++;
+			}
 
 			units[i]->testTile();
 		}
@@ -102,7 +102,6 @@ struct Game {
 	void update() {
 		debugText();
 
-		map->updateScoutedMapData();
 		map->renderMap(SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE);
 		callUnits();
 
