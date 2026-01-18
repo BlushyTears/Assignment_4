@@ -2,6 +2,7 @@
 
 #include "raylib.h"
 #include "raymath.h"
+#include <FSM.h>
 
 #include <iostream>
 #include <vector>
@@ -23,6 +24,7 @@ enum Behaviors {
 struct Map;
 struct Tile;
 struct Connection;
+struct ResourceTracker;
 
 struct UnitBase {
 	Vector2 pos;
@@ -32,14 +34,14 @@ struct UnitBase {
 	float unitSpeed = 2.5f;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
-
+	bool isTraining = false;
 	Map* mapReference = nullptr;
 	int connectionIdx = 0;
 	std::vector<Connection> currentPath;
-
 	std::vector<Tile>* renderedTiles;
+	ResourceTracker* resourceTracker = nullptr;
 
-	UnitBase(int _x, int _y, Map* _mp);
+	UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt);
 	bool isAwaitingNewPath = false;
 
 	void testTile();
@@ -58,9 +60,11 @@ struct UnitBase {
 	}
 };
 
+
+
 // Scout can be created with 1 worker
 struct Scout : UnitBase {
-	Scout(int _x, int _y, Map* _mp) : UnitBase(_x, _y, _mp) {}
+	Scout(int _x, int _y, Map* _mp, ResourceTracker* _rt) : UnitBase(_x, _y, _mp, _rt) {}
 	void renderUnit() {
 		DrawCircle(pos.x, pos.y, size, BLUE);
 	}
@@ -69,7 +73,7 @@ struct Scout : UnitBase {
 };
 
 struct Worker : UnitBase {
-	Worker(int _x, int _y, Map* _mp) : UnitBase(_x, _y, _mp) {}
+	Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt) : UnitBase(_x, _y, _mp, _rt) {}
 
 	void moveUnit() override;
 	void renderUnit() {
@@ -77,3 +81,43 @@ struct Worker : UnitBase {
 	};
 	void calculateNewPath() override;
 };
+
+
+//// Idle state stuff
+//template <typename T>
+//struct IdleAction : Action<T> {
+//	void execute(T& agent) override {
+//		std::cout << "Unit is being idle" << std::endl;
+//	}
+//};
+//
+//template <typename T>
+//struct IdleState : State<T> {
+//	IdleAction<T> ideling;
+//	std::vector<Transition<T>*> transitions;
+//
+//	std::vector<Action<T>*> getActions() override { return { &ideling }; };
+//	std::vector<Transition<T>*> getTransitions() override { return transitions; };
+//};
+//
+//template<typename T>
+//struct TargetIdleState : TargetState<T> {
+//	IdleState<T>* idleState;
+//
+//	TargetIdleState(IdleState<T>* s) : idleState(s) {}
+//
+//	std::vector<Action<T>*> getActions() override { return {}; }
+//	State<T>* getTargetState() override { return idleState; }
+//};
+//
+//template <typename T>
+//struct IdleDecision : Decision<T> {
+//	T testValue(T& agent) override { return agent; }
+//	DecisionTreeNode<T>* getBranch(T& agent) override {
+//		if (true) {
+//			std::cout << "Decided to be idle" << std::endl;
+//			return this->trueNode;
+//		}
+//		return this->falseNode;
+//	}
+//};

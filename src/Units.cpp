@@ -5,16 +5,16 @@
 #include <iostream>
 
 
-UnitBase::UnitBase(int _x, int _y, Map* _mp) {
+UnitBase::UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt) {
 	pos.x = _x;
 	pos.y = _y;
 	targetPos = pos;
 	mapReference = _mp;
 	renderedTiles = &mapReference->renderedTiles;
+	resourceTracker = _rt;
 }
 
-void UnitBase::AwaitNewPath()
-{
+void UnitBase::AwaitNewPath() {
 	if (isAwaitingNewPath)
 		return;
 
@@ -109,8 +109,6 @@ void Worker::calculateNewPath() {
 		ref->walkablePaths[currentTileIdx],
 		ref->walkablePaths[randomNodeIdx],
 		ref->walkablePathsNeighboors);
-
-	std::cout << "Current path size: " << currentPath.size() << std::endl;
 
 	UnitBase::calculateNewPath();
 }
