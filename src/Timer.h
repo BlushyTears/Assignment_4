@@ -17,7 +17,7 @@ struct Timer {
     bool timerFinished = false;
     float timeCap = 1;
 
-    void setNewTimer(int _newCap) {
+    void setNewTimer(float _newCap) {
         timerFinished = false;
         timeCap = _newCap;
         currTimePassed = 0;

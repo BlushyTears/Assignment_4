@@ -68,7 +68,6 @@ struct Decision : DecisionTreeNode<T> {
 	DecisionTreeNode<T>* falseNode = nullptr;
 
 	// Should probably remove this even if book uses it
-	virtual T testValue(T& agent) = 0;
 	virtual DecisionTreeNode<T>* getBranch(T& agent) = 0;
 
 	DecisionTreeNode* makeDecision(T& agent) override {

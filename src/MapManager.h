@@ -173,7 +173,7 @@ struct Map {
 
 			if (canSpawnHere) {
 				int entityCount = 1; // This should be read externally
-				Entity entity(entityCount, eIronOre, {0, 0}, Color{ 255, 255, 255, 255 });
+				Entity entity(entityCount, eIronOre, {0, 0}, Color{ 10, 10, 10, 255 });
 				renderedTiles[randomTileIdx].occupyingEntities.push_back(entity);
 				ironOreIndices.push_back(randomTileIdx);
 			}

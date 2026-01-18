@@ -8,6 +8,8 @@
 
 #include <vector>
 #include "Units.h"
+#include "Worker.h"
+
 #include "raylib.h"
 #include "MapManager.h"
 #include "TaskManager.h"
@@ -18,9 +20,7 @@ constexpr int SCREEN_HEIGHT = 1200;
 constexpr int TILE_SIZE = 10;
 
 
-// One resource tracker is instantly increased for 
-// internal use so that we don't do 1 task 5 times.
-// The other resource tracker is incremented after some timer count
+// Everything is a resource in the context of this game
 struct ResourceTracker {
 	// Resources:
 	int treeCount = 0;
@@ -68,10 +68,10 @@ struct Event {
 	UnitToTrain unitToTrain;
 	Timer trainTimer;
 
-	Event(UnitBase* _unitPtr, UnitToTrain _unitType) {
+	Event(UnitBase* _unitPtr, UnitToTrain _unitType, float _trainTime) {
 		unitPtr = _unitPtr;
 		unitToTrain = _unitType;
-		trainTimer.setNewTimer(5);
+		trainTimer.setNewTimer(_trainTime);
 	}
 };
 
@@ -81,8 +81,8 @@ struct Game {
 	// todo: turn these into smart pointers
 	Map* map = nullptr; 
 	//TaskManager* tm = nullptr;
-	ResourceTracker* resourceTrackerInternal = nullptr;
-	ResourceTracker* resourceTrackerDisplay = nullptr;
+	ResourceTracker* targetResourceCount = nullptr; // used so not all units do the same thing
+	ResourceTracker* actualResourceCount = nullptr;
 	std::vector<std::unique_ptr<UnitBase>> units;
 	std::vector<Event> trainingUnits;
 
@@ -91,13 +91,13 @@ struct Game {
 	int yCount = 1;
 	int baseXUnitSpawn = 80;
 	int baseYUnitSpawn = 200;
-	int spacing = 10;
+	int spacing = 3;
 
 	Game(int _initialUnits) {
 		mapData = transcribeData("..//mapData.txt");
 		map = new Map(mapData, SCREEN_WIDTH, TILE_SIZE);
-		resourceTrackerInternal = new ResourceTracker();
-		resourceTrackerDisplay = new ResourceTracker();
+		targetResourceCount = new ResourceTracker();
+		actualResourceCount = new ResourceTracker();
 
 		for (int i = 0; i < _initialUnits; i++) {
 			if (xCount % initialFormationColumns == 0) {
@@ -109,55 +109,68 @@ struct Game {
 				baseXUnitSpawn + (spacing * xCount),
 				baseYUnitSpawn + (spacing * yCount),
 				map,
-				resourceTrackerInternal));
+				targetResourceCount));
 			xCount++;
 
 			units[i]->testTile();
 		}
 	}
 
+	// This effectively our brain for deciding units to train
 	UnitToTrain getNextUnitToTrain() {
-		if (resourceTrackerInternal->scoutCount < 5) {
+		if (targetResourceCount->scoutCount < 5) {
+			targetResourceCount->scoutCount++;
 			return EnumScout;
 		}
-		else if (resourceTrackerInternal->coalMinerCount < 3) {
+		else if (targetResourceCount->coalMinerCount < 3) {
+			targetResourceCount->coalMinerCount++;
 			return EnumCoalMiner;
 		}
-
 		return EnumNone;
 	}
 
 	void startTrainingUnits(UnitToTrain unitType) {
+		// We're done training units
+		if (unitType == EnumNone) {
+			return;
+		}
 		for (auto& unit : units) {
 			Worker* worker = dynamic_cast<Worker*>(unit.get());
 
+			float trainTime = 5.0f;
+			switch (unitType) {
+				case EnumScout: trainTime = 10.0f; break;
+				case EnumCoalMiner: trainTime = 5.0f; break;
+			}
+
 			if (worker && !worker->isTraining) {
 				worker->isTraining = true;
-				Event trainEvent(worker, unitType);
+				Event trainEvent(worker, unitType, trainTime);
 				trainingUnits.push_back(trainEvent);
 				break;
 			}
 		}
 	}
 
-	void convertUnit(UnitBase* workerPtr, UnitToTrain unitType) {
+	void convertUnit(UnitBase* unitPtr, UnitToTrain unitType) {
 		for (auto& unit : units) {
-			if (unit.get() == workerPtr) {
-				Vector2 tempPos = workerPtr->pos;
-				resourceTrackerInternal->workerCount--;
+			if (unit.get() == unitPtr) {
+				Vector2 tempPos = unitPtr->pos;
+				actualResourceCount->workerCount--;
 
 				switch (unitType) {
 					case EnumScout:
-						unit = std::make_unique<Scout>(tempPos.x, tempPos.y, map, resourceTrackerInternal);
-						resourceTrackerInternal->scoutCount++;
+						unit = std::make_unique<Scout>(tempPos.x, tempPos.y, map, targetResourceCount);
+						actualResourceCount->scoutCount++;
 						break;
 					case EnumCoalMiner:
-						unit = std::make_unique<CoalBuilder>(tempPos.x, tempPos.y, map, resourceTrackerInternal);
-						resourceTrackerInternal->coalMinerCount++;
+						unit = std::make_unique<CoalWorker>(tempPos.x, tempPos.y, map, targetResourceCount);
+						actualResourceCount->coalMinerCount++;
 						break;
 					case EnumNone:
 						break;
 				}
+				unit->isTraining = false;
 				break;
 			}
 		}
@@ -177,27 +190,12 @@ struct Game {
 		}
 	}
 
-	//void convertWorkerToScout() {
-	//	for (auto& unit : units) {
-	//		Worker* worker = dynamic_cast<Worker*>(unit.get());
-
-	//		if (worker) {
-	//			Vector2 tempPos = worker->pos;
-
-	//			unit = std::make_unique<Scout>(tempPos.x, tempPos.y, map, resourceTrackerInternal);
-	//			resourceTrackerDisplay->scoutCount++;
-	//			resourceTrackerDisplay->workerCount--;
-	//			break;
-	//		}
-	//	}
-	//}
-
 	void callUnits() {
 		for (auto& unit : units) {
 			unit->renderUnit();
 
 			if (!unit->isTraining) {
-				unit->moveUnit();
+				unit->commandUnit();
 				unit->moveUnitTowardsInternalGoal();
 			}
 		}
