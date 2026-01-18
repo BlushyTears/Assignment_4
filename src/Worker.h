@@ -12,59 +12,59 @@
 // Since workers are so much more complex, they need their own header and FSM
 
 struct ResourceTracker;
-struct UnitBase;
+struct Worker;
 
 // Idle state stuff
-struct IdleAction : Action<UnitBase> {
-	void execute(UnitBase& agent) override;
+struct IdleAction : Action<Worker> {
+	void execute(Worker& worker) override;
 };
 
-struct IdleState : State<UnitBase> {
+struct IdleState : State<Worker> {
 	IdleAction ideling;
-	std::vector<Transition<UnitBase>*> transitions;
+	std::vector<Transition<Worker>*> transitions;
 
-	std::vector<Action<UnitBase>*> getActions() override { return { &ideling }; };
-	std::vector<Transition<UnitBase>*> getTransitions() override { return transitions; };
+	std::vector<Action<Worker>*> getActions() override { return { &ideling }; };
+	std::vector<Transition<Worker>*> getTransitions() override { return transitions; };
 };
 
-struct TargetIdleState : TargetState<UnitBase> {
+struct TargetIdleState : TargetState<Worker> {
 	IdleState* idleState;
 
 	TargetIdleState(IdleState* s) : idleState(s) {}
 
-	std::vector<Action<UnitBase>*> getActions() override { return {}; }
-	State<UnitBase>* getTargetState() override { return idleState; }
+	std::vector<Action<Worker>*> getActions() override { return {}; }
+	State<Worker>* getTargetState() override { return idleState; }
 };
 
-struct IdleDecision : Decision<UnitBase> {
-	DecisionTreeNode<UnitBase>* getBranch(UnitBase& agent) override;
+struct IdleDecision : Decision<Worker> {
+	DecisionTreeNode<Worker>* getBranch(Worker& worker) override;
 };
 
 // Farming trees
-struct CollectWoodAction : Action<UnitBase> {
+struct CollectWoodAction : Action<Worker> {
 	// In here we set targetPos to nearest tree, go there and collect wood
-	void execute(UnitBase& agent) override;
+	void execute(Worker& worker) override;
 };
 
-struct CollectWoodState : State<UnitBase> {
+struct CollectWoodState : State<Worker> {
 	CollectWoodAction collectingWood;
-	std::vector<Transition<UnitBase>*> transitions;
+	std::vector<Transition<Worker>*> transitions;
 
-	std::vector<Action<UnitBase>*> getActions() override { return { &collectingWood }; };
-	std::vector<Transition<UnitBase>*> getTransitions() override { return transitions; };
+	std::vector<Action<Worker>*> getActions() override { return { &collectingWood }; };
+	std::vector<Transition<Worker>*> getTransitions() override { return transitions; };
 };
 
-struct TargetCollectWoodState : TargetState<UnitBase> {
+struct TargetCollectWoodState : TargetState<Worker> {
 	CollectWoodState* collectWoodState;
 
 	TargetCollectWoodState(CollectWoodState* s) : collectWoodState(s) {}
 
-	std::vector<Action<UnitBase>*> getActions() override { return {}; }
-	State<UnitBase>* getTargetState() override { return collectWoodState; }
+	std::vector<Action<Worker>*> getActions() override { return {}; }
+	State<Worker>* getTargetState() override { return collectWoodState; }
 };
 
-struct CollectWoodDecision : Decision<UnitBase> {
-	DecisionTreeNode<UnitBase>* getBranch(UnitBase& agent) override;
+struct CollectWoodDecision : Decision<Worker> {
+	DecisionTreeNode<Worker>* getBranch(Worker& worker) override;
 };
 
 struct Worker : UnitBase {
@@ -77,11 +77,11 @@ struct Worker : UnitBase {
 	IdleDecision* idleCheck;
 	CollectWoodDecision* collectWoodCheck;
 
-	DecisionTreeTransition<UnitBase>* toIdle;
-	DecisionTreeTransition<UnitBase>* toWoodcutting;
+	DecisionTreeTransition<Worker>* toIdle;
+	DecisionTreeTransition<Worker>* toWoodcutting;
 
-	StateMachine<UnitBase>* sm;
-	std::vector<Action<UnitBase>*> plans;
+	StateMachine<Worker>* sm;
+	std::vector<Action<Worker>*> plans;
 
 	Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt);
 
