@@ -16,9 +16,7 @@ struct UnitBase;
 
 // Idle state stuff
 struct IdleAction : Action<UnitBase> {
-	void execute(UnitBase& agent) override {
-		//std::cout << "Unit is being idle" << std::endl;
-	}
+	void execute(UnitBase& agent) override;
 };
 
 struct IdleState : State<UnitBase> {
@@ -45,9 +43,7 @@ struct IdleDecision : Decision<UnitBase> {
 // Farming trees
 struct CollectWoodAction : Action<UnitBase> {
 	// In here we set targetPos to nearest tree, go there and collect wood
-	void execute(UnitBase& agent) override {
-		std::cout << "Unit is collecting wood" << std::endl;
-	}
+	void execute(UnitBase& agent) override;
 };
 
 struct CollectWoodState : State<UnitBase> {
@@ -72,17 +68,17 @@ struct CollectWoodDecision : Decision<UnitBase> {
 };
 
 struct Worker : UnitBase {
-	IdleState* idelingState = new IdleState();
-	CollectWoodState* collectingWoodState = new CollectWoodState();
+	IdleState* idelingState;
+	CollectWoodState* collectingWoodState;
 
-	TargetIdleState* targetIdeling = new TargetIdleState(idelingState);
-	TargetCollectWoodState* targetWoodcutting = new TargetCollectWoodState(collectingWoodState);
+	TargetIdleState* targetIdeling;
+	TargetCollectWoodState* targetWoodcutting;
 
-	IdleDecision* idleCheck = new IdleDecision();
-	CollectWoodDecision* collectWoodCheck = new CollectWoodDecision();
+	IdleDecision* idleCheck;
+	CollectWoodDecision* collectWoodCheck;
 
-	DecisionTreeTransition<UnitBase>* toIdle = new DecisionTreeTransition<UnitBase>();
-	DecisionTreeTransition<UnitBase>* toWoodcutting = new DecisionTreeTransition<UnitBase>();
+	DecisionTreeTransition<UnitBase>* toIdle;
+	DecisionTreeTransition<UnitBase>* toWoodcutting;
 
 	StateMachine<UnitBase>* sm;
 	std::vector<Action<UnitBase>*> plans;
