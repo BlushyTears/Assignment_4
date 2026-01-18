@@ -82,6 +82,15 @@ struct Worker : UnitBase {
 	void calculateNewPath() override;
 };
 
+struct CoalBuilder : UnitBase {
+	CoalBuilder(int _x, int _y, Map* _mp, ResourceTracker* _rt) : UnitBase(_x, _y, _mp, _rt) {}
+
+	void moveUnit() override;
+	void renderUnit() {
+		DrawCircle(pos.x, pos.y, size, BLACK);
+	};
+	void calculateNewPath() override;
+};
 
 //// Idle state stuff
 //template <typename T>

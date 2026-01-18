@@ -110,6 +110,7 @@ void Worker::calculateNewPath() {
 		ref->walkablePaths[randomNodeIdx],
 		ref->walkablePathsNeighboors);
 
+
 	UnitBase::calculateNewPath();
 }
 
@@ -136,3 +137,40 @@ void Worker::moveUnit() {
 	}
 }
 
+// For now coal builders just behave like scouts
+void CoalBuilder::calculateNewPath() {
+	auto ref = mapReference->accessableTiles;
+	int randomNodeIdx = getRandomNumber(0, (ref->walkablePaths.size() - 1));
+
+	currentTileIdx = getcurrentCorrespondingTile(mapReference->accessableTiles->walkablePaths);
+
+	currentPath = ref->AStar(
+		ref->walkablePaths[currentTileIdx],
+		ref->walkablePaths[randomNodeIdx],
+		ref->walkablePathsNeighboors);
+
+	UnitBase::calculateNewPath();
+}
+
+void CoalBuilder::moveUnit() {
+	if (currentPath.size() == 0) {
+		AwaitNewPath();
+	}
+	else {
+		// Casually move toward targetPos
+		if (Vector2Distance(pos, targetPos) > 10) {
+			moveUnitTowardsInternalGoal();
+		}
+		// we hit our next goal
+		if (Vector2Distance(pos, targetPos) < 5) {
+			targetPos.x = (float)currentPath[connectionIdx].toNode.x;
+			targetPos.y = (float)currentPath[connectionIdx].toNode.y;
+			connectionIdx++;
+		}
+		// we reached the end of our path, so therefore reset and make new path
+		if (connectionIdx >= currentPath.size() - 1) {
+			currentPath.clear();
+			connectionIdx = 0;
+		}
+	}
+}
