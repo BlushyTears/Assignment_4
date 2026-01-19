@@ -120,7 +120,6 @@ struct ChartedMap {
         computeNeighboors();
         graph = new Graph(walkablePaths);
         openList = std::vector<NodeRecord>(10000);
-        std::cout << "scouted map size: " << walkablePaths.size() << std::endl;
     }
 
     // This map sets up everything related to everything non-algorithmic-related

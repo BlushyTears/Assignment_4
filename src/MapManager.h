@@ -92,19 +92,39 @@ struct Map {
 	std::queue<UnitBase*> searchQueue; // Units that want to search the map currently.
 
 	int mapTileSize;
-
 	int getNearestTreeIdx(UnitBase& unit) {
-		int minDist = std::numeric_limits<int>::max();
-		int treeIdx = -1;
+		if (scoutedTreeIndices.empty() || scoutedTiles->walkablePaths.empty())
+			return -1;
 
-		for (int i = 0; i < scoutedTreeIndices.size(); i++) {
-			int dist = abs(Vector2Length(scoutedTiles->walkablePaths[i] - unit.pos));
-			if (dist < minDist) {
-				minDist = dist;
-				treeIdx = i;
+		int minTreeDist = std::numeric_limits<int>::max();
+		int bestTreeRenderedIdx = -1;
+
+		for (auto treeRenderIdx : scoutedTreeIndices) {
+			int dist = Vector2Length(unit.pos - renderedTiles[treeRenderIdx].position);
+			if (dist < minTreeDist) {
+				minTreeDist = dist;
+				bestTreeRenderedIdx = treeRenderIdx;
 			}
 		}
-		return treeIdx;
+
+		// we didn't find any trees
+		if (bestTreeRenderedIdx == -1)
+			return bestTreeRenderedIdx;
+
+		Vector2 treePos = renderedTiles[bestTreeRenderedIdx].position;
+		float minPathPos = std::numeric_limits<float>::max();
+		int bestWalkableIdx = -1;
+
+		// this is so dumb
+		for (int i = 0; i < (int)scoutedTiles->walkablePaths.size(); i++) {
+			float dist = Vector2Distance(treePos, scoutedTiles->walkablePaths[i]);
+			if (dist < minPathPos) {
+				minPathPos = dist;
+				bestWalkableIdx = i;
+			}
+		}
+
+		return bestWalkableIdx;
 	}
 
 	bool isUnitNearTreeIdx(UnitBase& unit, int _treeIdx) {
@@ -119,8 +139,8 @@ struct Map {
 	}
 
 	void deleteTree(int _treeIdx) {
-		if (renderedTiles[_treeIdx].occupyingEntities.size()) {
-			std::cout << "Chopped down tree" << std::endl;
+		if (renderedTiles[_treeIdx].occupyingEntities.size() > 0) {
+			std::cout << "Chopped down tree, " << renderedTiles[_treeIdx].occupyingEntities.size() << " Left." << std::endl;
 			renderedTiles[_treeIdx].occupyingEntities.pop_back();
 		}
 	}
