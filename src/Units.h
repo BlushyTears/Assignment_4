@@ -31,9 +31,12 @@ struct UnitBase {
 	Vector2 targetPos;
 	// All units should be equally big so it's hard coded here
 	int size = 3;
-	float unitSpeed = 0.1f;
+	float unitSpeed = 0.5f;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
+	int goalIdx = 0;
+	bool shouldWander = true;
+
 	bool isTraining = false;
 	Map* mapReference = nullptr;
 	int connectionIdx = 0;

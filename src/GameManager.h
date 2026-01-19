@@ -19,7 +19,6 @@ constexpr int SCREEN_WIDTH = 1000;
 constexpr int SCREEN_HEIGHT = 1200;
 constexpr int TILE_SIZE = 10;
 
-
 // Everything is a resource in the context of this game
 struct ResourceTracker {
 	// Resources:
@@ -90,7 +89,7 @@ struct Game {
 	int xCount = 1;
 	int yCount = 1;
 	int baseXUnitSpawn = 80;
-	int baseYUnitSpawn = 200;
+	int baseYUnitSpawn = 300;
 	int spacing = 3;
 
 	Game(int _initialUnits) {
@@ -139,8 +138,8 @@ struct Game {
 
 			float trainTime = 5.0f;
 			switch (unitType) {
-				case EnumScout: trainTime = 10.0f; break;
-				case EnumCoalMiner: trainTime = 5.0f; break;
+				case EnumScout: trainTime = 3.0f; break;
+				case EnumCoalMiner: trainTime = 3.0f; break;
 			}
 
 			if (worker && !worker->isTraining) {
@@ -191,7 +190,9 @@ struct Game {
 	}
 
 	void callUnits() {
+		int idx = 0;
 		for (auto& unit : units) {
+			idx++;
 			unit->renderUnit();
 
 			if (!unit->isTraining) {
@@ -200,11 +201,13 @@ struct Game {
 			}
 		}
 
-		if (!map->searchQueue.empty())
-		{
+		if (!map->searchQueue.empty()) {
 			UnitBase* unit = map->searchQueue.front();
 			map->searchQueue.pop();
-			unit->calculateNewPath();
+			//if (unit->shouldWander)
+			{
+				unit->calculateNewPath();
+			}
 		}
 	}
 

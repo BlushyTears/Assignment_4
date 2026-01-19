@@ -17,14 +17,20 @@ void UnitBase::AwaitNewPath() {
 	if (isAwaitingNewPath)
 		return;
 
+	//std::cout << "Searching for new path";
 	mapReference->searchQueue.emplace(this);
 	isAwaitingNewPath = true;
 }
 
 void UnitBase::testTile() {
+	int idx = 0;
 	for (auto& tile : *renderedTiles) {
 		if (tile.isUnitWithinTile(*this, 25) && !tile.hasBeenScouted) {
 			tile.hasBeenScouted = true;
+
+			if (tile.tileType == Trees) {
+				mapReference->scoutedTreeIndices.push_back(idx);
+			}
 
 			if (tile.tileType == Grass || tile.tileType == Swamp) {
 				mapReference->scoutedTiles->walkablePaths.push_back(tile.position);
@@ -32,6 +38,7 @@ void UnitBase::testTile() {
 				mapReference->scoutedTiles->computeNewNeighboors(mapReference->scoutedTiles->walkablePaths.size() - 1);
 			}
 		}
+		idx++;
 	}
 }
 
@@ -96,6 +103,7 @@ void Scout::commandUnit() {
 // For now coal builders just behave like scouts
 void CoalWorker::calculateNewPath() {
 	auto ref = mapReference->scoutedTiles;
+
 	int randomNodeIdx = getRandomNumber(0, (ref->walkablePaths.size() - 1));
 	currentTileIdx = getcurrentCorrespondingTile(ref->walkablePaths);
 

@@ -91,3 +91,5 @@ struct Worker : UnitBase {
 	};
 	void calculateNewPath() override;
 };
+
+

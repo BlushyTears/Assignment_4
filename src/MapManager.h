@@ -76,34 +76,53 @@ struct Tile {
 			}
 		}
 	}
+
 	bool isUnitWithinTile(const UnitBase& unit, int perimiterCheck);
 };
 
 struct Map {
-	std::vector<Tile> renderedTiles;
-	std::vector<Vector2> renderedTilesPositions; // initial positions that we want the workers to use for path finding
+	using MapIndex = int;
+
+	std::vector<Tile> renderedTiles; // map
 	ChartedMap* accessableTiles = nullptr;
 	ChartedMap* scoutedTiles = nullptr;
 
-	std::vector<int> treeIndices; // Future tech for finding trees without looping through all tiles
-	std::vector<int> ironOreIndices; // Future tech for finding ores without looping through all tiles
-
+	std::vector<MapIndex> scoutedTreeIndices; // Future tech for finding trees without looping through all tiles
+	std::vector<MapIndex> ironOreIndices; // Future tech for finding ores without looping through all tiles
 	std::queue<UnitBase*> searchQueue; // Units that want to search the map currently.
 
 	int mapTileSize;
 
 	int getNearestTreeIdx(UnitBase& unit) {
 		int minDist = std::numeric_limits<int>::max();
-		int treeIdx = 0;
+		int treeIdx = -1;
 
-		for (int i = 0; i < treeIndices.size(); i++) {
-			int dist = abs(Vector2Length(renderedTiles[i].position - unit.pos));
+		for (int i = 0; i < scoutedTreeIndices.size(); i++) {
+			int dist = abs(Vector2Length(scoutedTiles->walkablePaths[i] - unit.pos));
 			if (dist < minDist) {
 				minDist = dist;
 				treeIdx = i;
 			}
 		}
 		return treeIdx;
+	}
+
+	bool isUnitNearTreeIdx(UnitBase& unit, int _treeIdx) {
+		int reach = 5;
+		if (_treeIdx == -1)
+			return false;
+		int dist = abs(Vector2Length(renderedTiles[_treeIdx].position - unit.pos));
+		if (dist < reach) {
+			return true;
+		}
+		return false;
+	}
+
+	void deleteTree(int _treeIdx) {
+		if (renderedTiles[_treeIdx].occupyingEntities.size()) {
+			std::cout << "Chopped down tree" << std::endl;
+			renderedTiles[_treeIdx].occupyingEntities.pop_back();
+		}
 	}
 
 	//int getNearestOreIdx(UnitBase& unit) {
@@ -115,16 +134,15 @@ struct Map {
 		mapTileSize = _tileSize;
 		string line;
 		int row = 0;
-
+		
 		while (getline(ss, line)) {
 			for (int col = 0; col < (int)line.length(); col++) {
 				Tile tempTile(col * _tileSize, row * _tileSize);
-
+				int index = row * (int)line.length() + col;
 				if (line[col] == 'T') {
 					tempTile.tileColor = { 50, 255, 50, 100 };
 					tempTile.tileType = Trees;
 					tempTile.spawnTrees(mapTileSize);
-					treeIndices.push_back(col);
 				}
 				else if (line[col] == 'V') {
 					tempTile.tileColor = { 50, 50, 255, 255 };
@@ -143,7 +161,6 @@ struct Map {
 					tempTile.tileType = Grass;
 				}
 				renderedTiles.push_back(tempTile);
-				renderedTilesPositions.push_back(tempTile.position);
 			}
 			row++;
 		}
@@ -191,7 +208,7 @@ struct Map {
 				for (auto& entity : tile.occupyingEntities) {
 					DrawRectangle(	tile.position.x + entity.tileOffset.x,
 									tile.position.y + entity.tileOffset.y,
-									_tileSize / 2, _tileSize / 2, { entity.entityColor });
+									_tileSize / 8, _tileSize / 8, { entity.entityColor });
 				}
 			}
 		}
