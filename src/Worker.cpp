@@ -111,14 +111,11 @@ void CollectWoodAction::execute(Worker& worker) {
 					worker.mapReference->fellTree(actualTreeTileIdx);
 					worker.targetResourceTracker->treeCount++;
 
-					if (worker.mapReference->renderedTiles[actualTreeTileIdx].occupyingEntities.size() == 0) {
-						auto& sti = worker.mapReference->scoutedTreeIndices;
-						sti.erase(std::remove(sti.begin(), sti.end(), actualTreeTileIdx), sti.end());
+					// reset goal
+					worker.goalIdx = -1;
+					worker.currentPath.clear();
+					worker.connectionIdx = 0;
 
-						worker.goalIdx = -1; // reset goal
-						worker.currentPath.clear();
-						worker.connectionIdx = 0;
-					}
 					worker.currentPath.clear();
 					worker.connectionIdx = 0;
 				}

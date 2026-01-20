@@ -31,7 +31,7 @@ struct UnitBase {
 	Vector2 targetPos;
 	// All units should be equally big so it's hard coded here
 	int size = 3;
-	float unitSpeed = 3.5f;
+	float unitSpeed = 1.5f;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
 	int goalIdx = 0;

@@ -75,7 +75,7 @@ struct Graph {
 	}
 
     void addLatestNodeToGraph(std::vector<Vector2>& paths) {
-        if (paths.empty()) {
+        if (paths.empty() || chartedGraph.size() == paths.size()) {
             return;
         }
 

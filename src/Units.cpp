@@ -54,7 +54,6 @@ void UnitBase::testTile() {
 	}
 }
 
-
 int UnitBase::getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck) {
 	if (pathToCheck.empty())
 		return 0;

@@ -139,18 +139,18 @@ struct Map {
 
 	void fellTree(int _treeIdx) {
 		int i = 0;
-		while (i < renderedTiles[_treeIdx].occupyingEntities.size()) {
-			if (renderedTiles[_treeIdx].occupyingEntities[i].entityType == eTree) {
-				Entity fallingTree = renderedTiles[_treeIdx].occupyingEntities[i];
 
-				std::cout << "Chopped down tree, " << renderedTiles[_treeIdx].occupyingEntities.size() << " Left." << std::endl;
-				renderedTiles[_treeIdx].occupyingEntities.pop_back();
-
-				Entity entity(1, eTree, Vector2{ fallingTree.tileOffset.x, fallingTree.tileOffset.y }, Color{ 255, 25, 25, 255 });
-				renderedTiles[_treeIdx].occupyingEntities.push_back(entity);
+		if (renderedTiles[_treeIdx].occupyingEntities.size() > 0) {
+			while (i < renderedTiles[_treeIdx].occupyingEntities.size()) {
+				if (renderedTiles[_treeIdx].occupyingEntities[i].entityType == eTree) {
+					renderedTiles[_treeIdx].occupyingEntities[i].entityColor = Color{ 255, 25, 25, 255 };
+					renderedTiles[_treeIdx].occupyingEntities[i].entityType = eFelledTree;
+					break;
+				}
+				i++;
 			}
-			i++;
 		}
+		// Todo: If tile is completely empty, we might wanna remove it here (Not sure)
 	}
 
 	//int getNearestOreIdx(UnitBase& unit) {
