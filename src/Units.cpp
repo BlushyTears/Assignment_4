@@ -23,24 +23,37 @@ void UnitBase::AwaitNewPath() {
 }
 
 void UnitBase::testTile() {
-	int idx = 0;
-	for (auto& tile : *renderedTiles) {
-		if (tile.isUnitWithinTile(*this, 25) && !tile.hasBeenScouted) {
-			tile.hasBeenScouted = true;
+	// first convert coordinates to tiles
+	int tileX = (int)(pos.x / 10);
+	int tileY = (int)(pos.y / 10);
 
-			if (tile.tileType == Trees) {
-				mapReference->scoutedTreeIndices.push_back(idx);
-			}
+	for (int dy = -1; dy <= 1; dy++) {
+		for (int dx = -1; dx <= 1; dx++) {
+			// then create indices for neighbooring tiles
+			int nx = tileX + dx;
+			int ny = tileY + dy;
 
-			if (tile.tileType == Grass || tile.tileType == Swamp) {
-				mapReference->scoutedTiles->walkablePaths.push_back(tile.position);
-				mapReference->scoutedTiles->graph->addLatestNodeToGraph(mapReference->scoutedTiles->walkablePaths);
-				mapReference->scoutedTiles->computeNewNeighboors(mapReference->scoutedTiles->walkablePaths.size() - 1);
+			// then check if they are actually neighbooring tiles using this compounded expression
+			if (nx >= 0 && nx < 100 && ny >= 0 && ny < 100) {
+				Tile& tile = mapReference->renderedTiles[ny * 100 + nx];
+
+				if (!tile.hasBeenScouted) {
+					tile.hasBeenScouted = true;
+
+					if (tile.tileType == Trees)
+						mapReference->scoutedTreeIndices.push_back(ny * 100 + nx);
+
+					if (tile.tileType == Grass || tile.tileType == Swamp) {
+						mapReference->scoutedTiles->walkablePaths.push_back(tile.position);
+						mapReference->scoutedTiles->graph->addLatestNodeToGraph(mapReference->scoutedTiles->walkablePaths);
+						mapReference->scoutedTiles->computeNewNeighboors(mapReference->scoutedTiles->walkablePaths.size() - 1);
+					}
+				}
 			}
 		}
-		idx++;
 	}
 }
+
 
 int UnitBase::getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck) {
 	if (pathToCheck.empty())

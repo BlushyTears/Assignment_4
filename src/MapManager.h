@@ -77,7 +77,6 @@ struct Tile {
 		}
 	}
 
-	bool isUnitWithinTile(const UnitBase& unit, int perimiterCheck);
 };
 
 struct Map {
@@ -116,7 +115,7 @@ struct Map {
 		int bestWalkableIdx = -1;
 
 		// this is so dumb
-		for (int i = 0; i < (int)scoutedTiles->walkablePaths.size(); i++) {
+		for (int i = 0; i < scoutedTiles->walkablePaths.size(); i++) {
 			float dist = Vector2Distance(treePos, scoutedTiles->walkablePaths[i]);
 			if (dist < minPathPos) {
 				minPathPos = dist;
@@ -138,10 +137,19 @@ struct Map {
 		return false;
 	}
 
-	void deleteTree(int _treeIdx) {
-		if (renderedTiles[_treeIdx].occupyingEntities.size() > 0) {
-			std::cout << "Chopped down tree, " << renderedTiles[_treeIdx].occupyingEntities.size() << " Left." << std::endl;
-			renderedTiles[_treeIdx].occupyingEntities.pop_back();
+	void fellTree(int _treeIdx) {
+		int i = 0;
+		while (i < renderedTiles[_treeIdx].occupyingEntities.size()) {
+			if (renderedTiles[_treeIdx].occupyingEntities[i].entityType == eTree) {
+				Entity fallingTree = renderedTiles[_treeIdx].occupyingEntities[i];
+
+				std::cout << "Chopped down tree, " << renderedTiles[_treeIdx].occupyingEntities.size() << " Left." << std::endl;
+				renderedTiles[_treeIdx].occupyingEntities.pop_back();
+
+				Entity entity(1, eTree, Vector2{ fallingTree.tileOffset.x, fallingTree.tileOffset.y }, Color{ 255, 25, 25, 255 });
+				renderedTiles[_treeIdx].occupyingEntities.push_back(entity);
+			}
+			i++;
 		}
 	}
 

@@ -56,7 +56,7 @@ int main ()
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello Raylib");
 	SearchAndSetResourceDir("resources");
-	//SetTargetFPS(240);
+	SetTargetFPS(65);
 	
 	//stringstream mapData = transcribeData("..//mapData.txt");
 	//Map map(mapData, SCREEN_WIDTH, TILE_SIZE);

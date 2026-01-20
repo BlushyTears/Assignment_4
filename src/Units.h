@@ -31,7 +31,7 @@ struct UnitBase {
 	Vector2 targetPos;
 	// All units should be equally big so it's hard coded here
 	int size = 3;
-	float unitSpeed = 0.5f;
+	float unitSpeed = 3.5f;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
 	int goalIdx = 0;
@@ -47,6 +47,7 @@ struct UnitBase {
 	UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt);
 	bool isAwaitingNewPath = false;
 
+	void moveFile();
 	void testTile();
 	void AwaitNewPath();
 	int getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck);

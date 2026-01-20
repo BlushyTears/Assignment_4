@@ -108,7 +108,7 @@ void CollectWoodAction::execute(Worker& worker) {
 
 				if (actualTreeTileIdx != -1) {
 
-					worker.mapReference->deleteTree(actualTreeTileIdx);
+					worker.mapReference->fellTree(actualTreeTileIdx);
 					worker.targetResourceTracker->treeCount++;
 
 					if (worker.mapReference->renderedTiles[actualTreeTileIdx].occupyingEntities.size() == 0) {
