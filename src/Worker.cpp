@@ -32,18 +32,18 @@ Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt) : UnitBase(_x, _y
 
 	sm = new StateMachine<Worker>(collectingWoodState);
 
-	// worker goal idx is more intricate so it needs to start at -1
+	unitSpeed = 0.5f;
 }
 
 DecisionTreeNode<Worker>* IdleDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount > 1000) {
+	if (worker.targetResourceTracker->treeCount > 10000) {
 		return this->trueNode;
 	}
 	return this->falseNode;
 }
 
 DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount < 1000) {
+	if (worker.targetResourceTracker->treeCount < 10000) {
 		return this->trueNode;
 	}
 	return this->falseNode;
@@ -54,50 +54,49 @@ void IdleAction::execute(Worker& worker) {
 }
 
 void CollectWoodAction::execute(Worker& worker) {
-	//std::cout << "Unit is cutting wood. goal index: " << worker.goalIdx << std::endl;
-	float distanceToTargetPos = Vector2Distance(worker.pos, worker.targetPos);
+	while (worker.currentPath.empty() || worker.connectionIdx >= (int)worker.currentPath.size()) {
+		Vector2 newTreePos = worker.mapReference->getNearestTreePos(worker);
 
-	DrawRectangle(worker.goalPos.x, worker.goalPos.y, 10, 10, PURPLE);
-	string currenPathSize = to_string(worker.currentPath.size()) + " Is path size";
-	const char* c = currenPathSize.c_str();
-	DrawText(c, 500, 1100, 24, GREEN);
-
-	//std::cout << worker.currentPath.size() << " Is the size for worker X" << std::endl;
-
-	if (Vector2Distance(worker.pos, worker.goalPos) < 1) {
-		worker.goalPos = worker.mapReference->getNearestTreePos(worker);
-		return;
-	}
-	else {
-		if (worker.currentPath.size() == 0) {
-			worker.AwaitNewPath();
+		if (Vector2Distance(worker.pos, newTreePos) < 0.1f) {
 			return;
 		}
-		else if (worker.currentPath.size() > 0) {
-			// Casually move toward targetPos
-			if (distanceToTargetPos >= 10) {
-				worker.moveUnitTowardsInternalGoal();
-			}
-			// we hit our next sub-goal
-			if (distanceToTargetPos < 5) {
-				if (worker.connectionIdx < (int)worker.currentPath.size()) {
-					worker.targetPos.x = (float)worker.currentPath[worker.connectionIdx].toNode.x;
-					worker.targetPos.y = (float)worker.currentPath[worker.connectionIdx].toNode.y;
-					worker.connectionIdx++;
-				}
-			}
-			// we reached the end of our path, so therefore reset and make new path
-			// and check if there are any nearby trees we can chop
-			if (worker.connectionIdx >= (int)worker.currentPath.size() - 1) {
-				worker.mapReference->fellTree(worker);
 
-				// reset goal
-				worker.currentPath.clear();
-				worker.connectionIdx = 0;
-			}
+		worker.goalPos = newTreePos;
+		worker.calculateNewPath();
+
+		if (worker.currentPath.empty()) {
+			worker.mapReference->removeTreeAtPos(newTreePos);
+			continue;
+		}
+		else {
+			worker.connectionIdx = 0;
+			worker.targetPos.x = worker.currentPath[0].toNode.x;
+			worker.targetPos.y = worker.currentPath[0].toNode.y;
+			break;
 		}
 	}
+
+	if (Vector2Distance(worker.pos, worker.targetPos) > 1.0f) {
+		worker.moveUnitTowardsInternalGoal();
+		return;
+	}
+
+	worker.connectionIdx++;
+	if (worker.connectionIdx < (int)worker.currentPath.size()) {
+		worker.targetPos.x = worker.currentPath[worker.connectionIdx].toNode.x;
+		worker.targetPos.y = worker.currentPath[worker.connectionIdx].toNode.y;
+		return;
+	}
+
+	if (worker.mapReference->fellTree(worker)) {
+		worker.targetResourceTracker->treeCount++;
+		worker.mapReference->removeTreeAtPos(worker.goalPos);
+	}
+
+	worker.currentPath.clear();
+	worker.connectionIdx = 0;
 }
+
 
 // Run fsm through here
 void Worker::commandUnit() {
@@ -121,5 +120,11 @@ void Worker::calculateNewPath() {
 					ref->walkablePaths[this->currentGoalTileIdx],
 					ref->walkablePathsNeighboors);
 
+	if (currentPath.size() > 0) {
+		this->connectionIdx = 0;
+		this->targetPos.x = (float)this->currentPath[this->connectionIdx].toNode.x;
+		this->targetPos.y = (float)this->currentPath[this->connectionIdx].toNode.y;
+	}
+	
 	UnitBase::calculateNewPath();
 }

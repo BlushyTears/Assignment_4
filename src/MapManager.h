@@ -76,7 +76,6 @@ struct Tile {
 			}
 		}
 	}
-
 };
 
 struct Map {
@@ -87,70 +86,108 @@ struct Map {
 	ChartedMap* scoutedTiles = nullptr;
 
 	std::vector<MapIndex> scoutedTreeIndices; // Future tech for finding trees without looping through all tiles
+	std::vector<MapIndex> scoutedFelledTreeIndices; // Future tech for finding trees without looping through all tiles
 	std::vector<MapIndex> ironOreIndices; // Future tech for finding ores without looping through all tiles
 	std::queue<UnitBase*> searchQueue; // Units that want to search the map currently.
 	int mapTileSize;
 
 	Vector2 getNearestTreePos(UnitBase& unit) {
 		int minTreeDist = std::numeric_limits<int>::max();
+		Vector2 nearestPos = unit.pos;
 
-		for (auto treeRenderIdx : scoutedTreeIndices) {
-			int dist = Vector2Length(unit.pos - renderedTiles[treeRenderIdx].position);
+		for (auto treeTileIdx : scoutedTreeIndices) {
+			int dist = Vector2Length(unit.pos - renderedTiles[treeTileIdx].position);
 			if (dist < minTreeDist) {
 				minTreeDist = dist;
-				return renderedTiles[treeRenderIdx].position;
+				nearestPos = renderedTiles[treeTileIdx].position;
 			}
 		}
 
 		// we didn't find any trees
-		return unit.pos;
-	}
-
-	bool isUnitNearTreeIdx(UnitBase& unit, int _treeIdx) {
-		int reach = 5;
-		if (_treeIdx == -1)
-			return false;
-		int dist = abs(Vector2Length(renderedTiles[_treeIdx].position - unit.pos));
-		if (dist < reach) {
-			return true;
-		}
-		return false;
+		return nearestPos;
 	}
 
 	// find closest scouted tree relative to unit and chop that down
-	void fellTree(UnitBase& unit) {
+	bool fellTree(UnitBase& unit) {
 		int i = 0;
-
 		int minTreeDist = std::numeric_limits<int>::max();
 		int closestTreeIdx = -1;
+		float maxChopDistance = 25.0f;
+		std::vector<MapIndex> toRemove;
 
-		for (auto treeRenderIdx : scoutedTreeIndices) {
-			int dist = Vector2Length(unit.pos - renderedTiles[treeRenderIdx].position);
+		for (auto treeTileIdx : scoutedTreeIndices) {
+			bool tileHasTree = false;
+
+			for (auto& e : renderedTiles[treeTileIdx].occupyingEntities) {
+				if (e.entityType == eTree) {
+					tileHasTree = true;
+					break;
+				}
+			}
+
+			if (!tileHasTree) {
+				toRemove.push_back(treeTileIdx);
+				continue;
+			}
+
+			float dist = Vector2Length(unit.pos - renderedTiles[treeTileIdx].position);
+
 			if (dist < minTreeDist) {
 				minTreeDist = dist;
-				closestTreeIdx = treeRenderIdx;
+				closestTreeIdx = treeTileIdx;
 			}
 		}
 
 		// there are no nearby trees to chop
-		if (closestTreeIdx == -1)
-			return;
+		if (closestTreeIdx == -1 || minTreeDist > maxChopDistance)
+			return false;
 
-		if (renderedTiles[closestTreeIdx].occupyingEntities.size() > 0) {
-			while (i < renderedTiles[closestTreeIdx].occupyingEntities.size()) {
-				if (renderedTiles[closestTreeIdx].occupyingEntities[i].entityType == eTree) {
-					renderedTiles[closestTreeIdx].occupyingEntities[i].entityColor = Color{ 255, 25, 25, 255 };
-					renderedTiles[closestTreeIdx].occupyingEntities[i].entityType = eFelledTree;
-					break;
-				}
-				i++;
+		// chop down 1 tree
+		for (auto& e : renderedTiles[closestTreeIdx].occupyingEntities) {
+			if (e.entityType == eTree) {
+				e.entityType = eFelledTree;
+				e.entityColor = Color{ 255, 25, 25, 255 };
+				break;
 			}
 		}
+
+		for (int idx : toRemove) {
+			scoutedTreeIndices.erase(std::remove(scoutedTreeIndices.begin(), scoutedTreeIndices.end(), idx), scoutedTreeIndices.end());
+			scoutedFelledTreeIndices.push_back(idx);
+		}
+
+		// successfully chopped down a tree on a tile
+		return true;
 	}
 
 	//int getNearestOreIdx(UnitBase& unit) {
 
 	//}
+
+	void removeTreeAtPos(Vector2 treePos) {
+		for (auto it = scoutedTreeIndices.begin(); it != scoutedTreeIndices.end();) {
+			int idx = *it;
+			Tile& tile = renderedTiles[idx];
+
+			if (Vector2Distance(tile.position, treePos) < 1.0f) {
+				tile.tileType = Grass;
+
+				for (auto entityIt = tile.occupyingEntities.begin(); entityIt != tile.occupyingEntities.end(); ) {
+					if (entityIt->entityType == eTree) {
+						entityIt = tile.occupyingEntities.erase(entityIt);
+					}
+					else {
+						entityIt++;
+					}
+				}
+
+				it = scoutedTreeIndices.erase(it);
+			}
+			else {
+				it++;
+			}
+		}
+	}
 
 	Map(stringstream& ss, int _screenWidth, int _tileSize) {
 		accessableTiles = new ChartedMap(ss.str(), _tileSize);
