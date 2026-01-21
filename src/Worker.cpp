@@ -33,31 +33,17 @@ Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt) : UnitBase(_x, _y
 	sm = new StateMachine<Worker>(collectingWoodState);
 
 	// worker goal idx is more intricate so it needs to start at -1
-	goalIdx = -1;
 }
 
 DecisionTreeNode<Worker>* IdleDecision::getBranch(Worker& worker) {
-	// Only start chopping trees once the map is a certain size (testing reasons)
-	if (/* worker.targetResourceTracker->treeCount >= 500 */ worker.goalIdx == -1) {
-		int nextPotentialGoal = worker.mapReference->getNearestTreeIdx(worker);
-
-		if (nextPotentialGoal != -1) {
-			worker.goalIdx = nextPotentialGoal;
-			return this->falseNode;
-		}
-
+	if (worker.targetResourceTracker->treeCount > 1000) {
 		return this->trueNode;
 	}
 	return this->falseNode;
 }
 
 DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
-	if (worker.goalIdx == -1) {
-		worker.goalIdx = worker.mapReference->getNearestTreeIdx(worker);
-	}
-
-	// found a tree
-	if (worker.goalIdx != -1) {
+	if (worker.targetResourceTracker->treeCount < 1000) {
 		return this->trueNode;
 	}
 	return this->falseNode;
@@ -69,8 +55,17 @@ void IdleAction::execute(Worker& worker) {
 
 void CollectWoodAction::execute(Worker& worker) {
 	//std::cout << "Unit is cutting wood. goal index: " << worker.goalIdx << std::endl;
-	if (worker.goalIdx == -1) {
-		worker.goalIdx = worker.mapReference->getNearestTreeIdx(worker);
+	float distanceToTargetPos = Vector2Distance(worker.pos, worker.targetPos);
+
+	DrawRectangle(worker.goalPos.x, worker.goalPos.y, 10, 10, PURPLE);
+	string currenPathSize = to_string(worker.currentPath.size()) + " Is path size";
+	const char* c = currenPathSize.c_str();
+	DrawText(c, 500, 1100, 24, GREEN);
+
+	//std::cout << worker.currentPath.size() << " Is the size for worker X" << std::endl;
+
+	if (Vector2Distance(worker.pos, worker.goalPos) < 1) {
+		worker.goalPos = worker.mapReference->getNearestTreePos(worker);
 		return;
 	}
 	else {
@@ -80,11 +75,11 @@ void CollectWoodAction::execute(Worker& worker) {
 		}
 		else if (worker.currentPath.size() > 0) {
 			// Casually move toward targetPos
-			if (Vector2Distance(worker.pos, worker.targetPos) > 10) {
+			if (distanceToTargetPos >= 10) {
 				worker.moveUnitTowardsInternalGoal();
 			}
-			// we hit our next goal
-			if (Vector2Distance(worker.pos, worker.targetPos) < 5) {
+			// we hit our next sub-goal
+			if (distanceToTargetPos < 5) {
 				if (worker.connectionIdx < (int)worker.currentPath.size()) {
 					worker.targetPos.x = (float)worker.currentPath[worker.connectionIdx].toNode.x;
 					worker.targetPos.y = (float)worker.currentPath[worker.connectionIdx].toNode.y;
@@ -92,38 +87,13 @@ void CollectWoodAction::execute(Worker& worker) {
 				}
 			}
 			// we reached the end of our path, so therefore reset and make new path
-			if (worker.connectionIdx >= (int)worker.currentPath.size()) {
-				Vector2 arrivalPos = worker.pos;
-				int actualTreeTileIdx = -1;
+			// and check if there are any nearby trees we can chop
+			if (worker.connectionIdx >= (int)worker.currentPath.size() - 1) {
+				worker.mapReference->fellTree(worker);
 
-				float closestTree = 200.0f;
-				for (int treeMapIdx : worker.mapReference->scoutedTreeIndices) {
-					float d = Vector2Distance(arrivalPos, worker.mapReference->renderedTiles[treeMapIdx].position);
-
-					if (d < closestTree) {
-						closestTree = d;
-						actualTreeTileIdx = treeMapIdx;
-					}
-				}
-
-				if (actualTreeTileIdx != -1) {
-
-					worker.mapReference->fellTree(actualTreeTileIdx);
-					worker.targetResourceTracker->treeCount++;
-
-					// reset goal
-					worker.goalIdx = -1;
-					worker.currentPath.clear();
-					worker.connectionIdx = 0;
-
-					worker.currentPath.clear();
-					worker.connectionIdx = 0;
-				}
-				else {
-					worker.goalIdx = -1; 
-					worker.currentPath.clear();
-					worker.connectionIdx = 0;
-				}
+				// reset goal
+				worker.currentPath.clear();
+				worker.connectionIdx = 0;
 			}
 		}
 	}
@@ -142,27 +112,14 @@ void Worker::calculateNewPath() {
 	auto ref = mapReference->scoutedTiles;
 	int targetIdx = 0;
 
-	if (ref->walkablePaths.empty())
-		return;
+	int randomNodeIdx = getRandomNumber(0, (ref->walkablePaths.size() - 1));
 
-	if (shouldWander) {
-		targetIdx = getRandomNumber(0, (ref->walkablePaths.size() - 1));
-	}
-	else {
-		targetIdx = goalIdx;
-	}
-
-	if (targetIdx < 0 || targetIdx >= ref->walkablePaths.size()) 
-		return;
-
-
-	currentTileIdx = getcurrentCorrespondingTile(ref->walkablePaths);
+	this->currentTileIdx = getcurrentCorrespondingTile(mapReference->scoutedTiles->walkablePaths, this->pos);
+	this->currentGoalTileIdx = getcurrentCorrespondingTile(mapReference->scoutedTiles->walkablePaths, this->goalPos);
 	currentPath = ref->AStar(
-		ref->walkablePaths[currentTileIdx],
-		ref->walkablePaths[targetIdx], // position of targetIndex in full map. Vector2
-		ref->walkablePathsNeighboors);
+					ref->walkablePaths[this->currentTileIdx],
+					ref->walkablePaths[this->currentGoalTileIdx],
+					ref->walkablePathsNeighboors);
 
-	if(currentPath.size() > 0) {}
-	//std::cout << "path" << std::endl;
 	UnitBase::calculateNewPath();
 }

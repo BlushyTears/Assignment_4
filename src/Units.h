@@ -27,14 +27,15 @@ struct Connection;
 struct ResourceTracker;
 
 struct UnitBase {
-	Vector2 pos;
-	Vector2 targetPos;
+	Vector2 pos; // current pos
+	Vector2 targetPos; // sub-goal in a path
+	Vector2 goalPos; // final goal in a path
 	// All units should be equally big so it's hard coded here
 	int size = 3;
-	float unitSpeed = 1.5f;
+	float unitSpeed = 0.5f;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
-	int goalIdx = 0;
+	int currentGoalTileIdx = 0;
 	bool shouldWander = true;
 
 	bool isTraining = false;
@@ -50,7 +51,7 @@ struct UnitBase {
 	void moveFile();
 	void testTile();
 	void AwaitNewPath();
-	int getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck);
+	int getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck, Vector2& _unitPos);
 	virtual void renderUnit() = 0;
 	virtual void commandUnit() = 0;
 

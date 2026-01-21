@@ -89,41 +89,21 @@ struct Map {
 	std::vector<MapIndex> scoutedTreeIndices; // Future tech for finding trees without looping through all tiles
 	std::vector<MapIndex> ironOreIndices; // Future tech for finding ores without looping through all tiles
 	std::queue<UnitBase*> searchQueue; // Units that want to search the map currently.
-
 	int mapTileSize;
-	int getNearestTreeIdx(UnitBase& unit) {
-		if (scoutedTreeIndices.empty() || scoutedTiles->walkablePaths.empty())
-			return -1;
 
+	Vector2 getNearestTreePos(UnitBase& unit) {
 		int minTreeDist = std::numeric_limits<int>::max();
-		int bestTreeRenderedIdx = -1;
 
 		for (auto treeRenderIdx : scoutedTreeIndices) {
 			int dist = Vector2Length(unit.pos - renderedTiles[treeRenderIdx].position);
 			if (dist < minTreeDist) {
 				minTreeDist = dist;
-				bestTreeRenderedIdx = treeRenderIdx;
+				return renderedTiles[treeRenderIdx].position;
 			}
 		}
 
 		// we didn't find any trees
-		if (bestTreeRenderedIdx == -1)
-			return bestTreeRenderedIdx;
-
-		Vector2 treePos = renderedTiles[bestTreeRenderedIdx].position;
-		float minPathPos = std::numeric_limits<float>::max();
-		int bestWalkableIdx = -1;
-
-		// this is so dumb
-		for (int i = 0; i < scoutedTiles->walkablePaths.size(); i++) {
-			float dist = Vector2Distance(treePos, scoutedTiles->walkablePaths[i]);
-			if (dist < minPathPos) {
-				minPathPos = dist;
-				bestWalkableIdx = i;
-			}
-		}
-
-		return bestWalkableIdx;
+		return unit.pos;
 	}
 
 	bool isUnitNearTreeIdx(UnitBase& unit, int _treeIdx) {
@@ -137,20 +117,35 @@ struct Map {
 		return false;
 	}
 
-	void fellTree(int _treeIdx) {
+	// find closest scouted tree relative to unit and chop that down
+	void fellTree(UnitBase& unit) {
 		int i = 0;
 
-		if (renderedTiles[_treeIdx].occupyingEntities.size() > 0) {
-			while (i < renderedTiles[_treeIdx].occupyingEntities.size()) {
-				if (renderedTiles[_treeIdx].occupyingEntities[i].entityType == eTree) {
-					renderedTiles[_treeIdx].occupyingEntities[i].entityColor = Color{ 255, 25, 25, 255 };
-					renderedTiles[_treeIdx].occupyingEntities[i].entityType = eFelledTree;
+		int minTreeDist = std::numeric_limits<int>::max();
+		int closestTreeIdx = -1;
+
+		for (auto treeRenderIdx : scoutedTreeIndices) {
+			int dist = Vector2Length(unit.pos - renderedTiles[treeRenderIdx].position);
+			if (dist < minTreeDist) {
+				minTreeDist = dist;
+				closestTreeIdx = treeRenderIdx;
+			}
+		}
+
+		// there are no nearby trees to chop
+		if (closestTreeIdx == -1)
+			return;
+
+		if (renderedTiles[closestTreeIdx].occupyingEntities.size() > 0) {
+			while (i < renderedTiles[closestTreeIdx].occupyingEntities.size()) {
+				if (renderedTiles[closestTreeIdx].occupyingEntities[i].entityType == eTree) {
+					renderedTiles[closestTreeIdx].occupyingEntities[i].entityColor = Color{ 255, 25, 25, 255 };
+					renderedTiles[closestTreeIdx].occupyingEntities[i].entityType = eFelledTree;
 					break;
 				}
 				i++;
 			}
 		}
-		// Todo: If tile is completely empty, we might wanna remove it here (Not sure)
 	}
 
 	//int getNearestOreIdx(UnitBase& unit) {

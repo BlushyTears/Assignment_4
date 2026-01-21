@@ -204,10 +204,7 @@ struct Game {
 		if (!map->searchQueue.empty()) {
 			UnitBase* unit = map->searchQueue.front();
 			map->searchQueue.pop();
-			//if (unit->shouldWander)
-			{
-				unit->calculateNewPath();
-			}
+			unit->calculateNewPath();
 		}
 	}
 

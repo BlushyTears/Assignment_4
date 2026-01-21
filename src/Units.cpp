@@ -8,6 +8,7 @@ UnitBase::UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt) {
 	pos.x = _x;
 	pos.y = _y;
 	targetPos = pos;
+	goalPos = pos;
 	mapReference = _mp;
 	renderedTiles = &mapReference->renderedTiles;
 	targetResourceTracker = _rt;
@@ -54,7 +55,7 @@ void UnitBase::testTile() {
 	}
 }
 
-int UnitBase::getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck) {
+int UnitBase::getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck, Vector2& _unitPos) {
 	if (pathToCheck.empty())
 		return 0;
 
@@ -62,7 +63,7 @@ int UnitBase::getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck) {
 	int closestIdx = 0;
 
 	for (int i = 0; i < pathToCheck.size(); i++) {
-		float dist = Vector2Distance(pos, pathToCheck[i]);
+		float dist = Vector2Distance(_unitPos, pathToCheck[i]);
 
 		if (dist < minDist) {
 			minDist = dist;
@@ -77,7 +78,7 @@ void Scout::calculateNewPath() {
 	auto ref = mapReference->accessableTiles;
 	int randomNodeIdx = getRandomNumber(0, (ref->walkablePaths.size() - 1));
 
-	currentTileIdx = getcurrentCorrespondingTile(mapReference->accessableTiles->walkablePaths);
+	currentTileIdx = getcurrentCorrespondingTile(mapReference->accessableTiles->walkablePaths, this->pos);
 
 	currentPath = ref->AStar(
 		ref->walkablePaths[currentTileIdx],
@@ -117,7 +118,7 @@ void CoalWorker::calculateNewPath() {
 	auto ref = mapReference->scoutedTiles;
 
 	int randomNodeIdx = getRandomNumber(0, (ref->walkablePaths.size() - 1));
-	currentTileIdx = getcurrentCorrespondingTile(ref->walkablePaths);
+	currentTileIdx = getcurrentCorrespondingTile(ref->walkablePaths, this->pos);
 
 	currentPath = ref->AStar(
 		ref->walkablePaths[currentTileIdx],
