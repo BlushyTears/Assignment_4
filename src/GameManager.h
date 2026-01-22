@@ -90,7 +90,7 @@ struct Game {
 	int yCount = 1;
 	int baseXUnitSpawn = 80;
 	int baseYUnitSpawn = 300;
-	int spacing = 3;
+	int spacing = 5;
 
 	Game(int _initialUnits) {
 		mapData = transcribeData("..//mapData.txt");
@@ -108,7 +108,8 @@ struct Game {
 				baseXUnitSpawn + (spacing * xCount),
 				baseYUnitSpawn + (spacing * yCount),
 				map,
-				targetResourceCount));
+				targetResourceCount,
+				&units));
 			xCount++;
 
 			units[i]->testTile();
@@ -159,11 +160,11 @@ struct Game {
 
 				switch (unitType) {
 					case EnumScout:
-						unit = std::make_unique<Scout>(tempPos.x, tempPos.y, map, targetResourceCount);
+						unit = std::make_unique<Scout>(tempPos.x, tempPos.y, map, targetResourceCount, &units);
 						actualResourceCount->scoutCount++;
 						break;
 					case EnumCoalMiner:
-						unit = std::make_unique<CoalWorker>(tempPos.x, tempPos.y, map, targetResourceCount);
+						unit = std::make_unique<CoalWorker>(tempPos.x, tempPos.y, map, targetResourceCount, &units);
 						actualResourceCount->coalMinerCount++;
 						break;
 					case EnumNone:

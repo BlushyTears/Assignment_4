@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-UnitBase::UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt) {
+UnitBase::UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur) {
 	pos.x = _x;
 	pos.y = _y;
 	targetPos = pos;
@@ -12,6 +12,7 @@ UnitBase::UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt) {
 	mapReference = _mp;
 	renderedTiles = &mapReference->renderedTiles;
 	targetResourceTracker = _rt;
+	_unitsReference = _ur;
 }
 
 void UnitBase::AwaitNewPath() {

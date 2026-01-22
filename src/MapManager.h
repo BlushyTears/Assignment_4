@@ -209,7 +209,7 @@ struct Map {
 					tempTile.tileType = Water;
 				}
 				else if (line[col] == 'G') {
-					tempTile.tileColor = { 10, 235, 10, 255 };
+					tempTile.tileColor = { 150, 235, 10, 255 };
 					tempTile.tileType = Swamp;
 				}
 				else if (line[col] == 'B') {

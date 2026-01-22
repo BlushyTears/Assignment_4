@@ -6,7 +6,7 @@
 #include <iostream>
 
 // set up fsm here
-Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt) : UnitBase(_x, _y, _mp, _rt) {
+Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur) : UnitBase(_x, _y, _mp, _rt, _ur) {
 	idelingState = new IdleState();
 	collectingWoodState = new CollectWoodState();
 

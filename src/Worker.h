@@ -83,7 +83,7 @@ struct Worker : UnitBase {
 	StateMachine<Worker>* sm;
 	std::vector<Action<Worker>*> plans;
 
-	Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt);
+	Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur);
 
 	void commandUnit() override;
 	void renderUnit() {

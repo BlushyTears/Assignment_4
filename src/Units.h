@@ -44,8 +44,9 @@ struct UnitBase {
 	std::vector<Connection> currentPath;
 	std::vector<Tile>* renderedTiles;
 	ResourceTracker* targetResourceTracker = nullptr;
+	std::vector<std::unique_ptr<UnitBase>>* _unitsReference = nullptr;
 
-	UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt);
+	UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur);
 	bool isAwaitingNewPath = false;
 
 	void moveFile();
@@ -60,14 +61,30 @@ struct UnitBase {
 	};
 
 	void moveUnitTowardsInternalGoal() {
-		Vector2 dir = Vector2Normalize(targetPos - pos);
-		pos += dir * unitSpeed;
+		if (Vector2Distance(targetPos, pos) > 1.0f) {
+			pos += Vector2Normalize(targetPos - pos) * unitSpeed;
+		}
+
+		float minDist = (float)size * 2.0f;
+
+		// avoid collision with other agents
+		for (auto& unit : *_unitsReference) {
+			if (unit && unit.get() != this) {
+				Vector2 diff = pos - unit->pos;
+				float distSq = Vector2LengthSqr(diff);
+
+				if (distSq < minDist * minDist && distSq > 0.0f) {
+					float dist = sqrtf(distSq);
+					pos += (diff / dist) * (minDist - dist) * 0.5f;
+				}
+			}
+		}
 	}
 };
 
 // Scout can be created with 1 worker
 struct Scout : UnitBase {
-	Scout(int _x, int _y, Map* _mp, ResourceTracker* _rt) : UnitBase(_x, _y, _mp, _rt) {}
+	Scout(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur) : UnitBase(_x, _y, _mp, _rt, _ur) {}
 	void renderUnit() {
 		DrawCircle(pos.x, pos.y, size, BLUE);
 	}
@@ -76,7 +93,7 @@ struct Scout : UnitBase {
 };
 
 struct CoalWorker : UnitBase {
-	CoalWorker(int _x, int _y, Map* _mp, ResourceTracker* _rt) : UnitBase(_x, _y, _mp, _rt) {}
+	CoalWorker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur) : UnitBase(_x, _y, _mp, _rt, _ur) {}
 
 	void commandUnit() override;
 	void renderUnit() {
