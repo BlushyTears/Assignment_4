@@ -45,7 +45,7 @@ void UnitBase::testTile() {
 					if (tile.tileType == Trees)
 						mapReference->scoutedTreeIndices.push_back(ny * 100 + nx);
 
-					if (tile.tileType == Grass || tile.tileType == Swamp) {
+					if (tile.tileType == Grass || tile.tileType == Swamp || tile.tileType == Trees) {
 						mapReference->scoutedTiles->walkablePaths.push_back(tile.position);
 						mapReference->scoutedTiles->graph->addLatestNodeToGraph(mapReference->scoutedTiles->walkablePaths);
 						mapReference->scoutedTiles->computeNewNeighboors(mapReference->scoutedTiles->walkablePaths.size() - 1);

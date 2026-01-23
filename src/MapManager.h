@@ -38,6 +38,7 @@ struct Entity {
 	EntityTypes entityType;
 	Vector2 tileOffset; // dont spawn all trees on same pixel pos etc (If it's iron ore we default to 0,0)
 	Color entityColor;
+	bool isOccupied = false;
 
 	Entity() {}
 
@@ -94,16 +95,24 @@ struct Map {
 	Vector2 getNearestTreePos(UnitBase& unit) {
 		int minTreeDist = std::numeric_limits<int>::max();
 		Vector2 nearestPos = unit.pos;
+		Entity* targetEntity = nullptr;
 
-		for (auto treeTileIdx : scoutedTreeIndices) {
-			int dist = Vector2Length(unit.pos - renderedTiles[treeTileIdx].position);
-			if (dist < minTreeDist) {
-				minTreeDist = dist;
-				nearestPos = renderedTiles[treeTileIdx].position;
+		for (auto& treeTileIdx : scoutedTreeIndices) {
+			for (auto& tree : renderedTiles[treeTileIdx].occupyingEntities) {
+				if (tree.isOccupied || tree.entityType != eTree)
+					continue;
+
+				int dist = Vector2Length(unit.pos - renderedTiles[treeTileIdx].position);
+				if (dist < minTreeDist) {
+					minTreeDist = dist;
+					nearestPos = renderedTiles[treeTileIdx].position + tree.tileOffset;
+					targetEntity = &tree;
+				}
 			}
 		}
 
-		// we didn't find any trees
+		if (targetEntity) targetEntity->isOccupied = true;
+
 		return nearestPos;
 	}
 
@@ -142,20 +151,6 @@ struct Map {
 		if (closestTreeIdx == -1 || minTreeDist > maxChopDistance)
 			return false;
 
-		// chop down 1 tree
-		for (auto& e : renderedTiles[closestTreeIdx].occupyingEntities) {
-			if (e.entityType == eTree) {
-				e.entityType = eFelledTree;
-				e.entityColor = Color{ 255, 25, 25, 255 };
-				break;
-			}
-		}
-
-		for (int idx : toRemove) {
-			scoutedTreeIndices.erase(std::remove(scoutedTreeIndices.begin(), scoutedTreeIndices.end(), idx), scoutedTreeIndices.end());
-			scoutedFelledTreeIndices.push_back(idx);
-		}
-
 		// successfully chopped down a tree on a tile
 		return true;
 	}
@@ -169,18 +164,19 @@ struct Map {
 			int idx = *it;
 			Tile& tile = renderedTiles[idx];
 
-			if (Vector2Distance(tile.position, treePos) < 1.0f) {
+			if (treePos.x >= tile.position.x && treePos.x < tile.position.x + mapTileSize &&
+				treePos.y >= tile.position.y && treePos.y < tile.position.y + mapTileSize) {
+
 				tile.tileType = Grass;
 
 				for (auto entityIt = tile.occupyingEntities.begin(); entityIt != tile.occupyingEntities.end(); ) {
-					if (entityIt->entityType == eTree) {
+					if (entityIt->entityType == eTree || entityIt->entityType == eFelledTree) {
 						entityIt = tile.occupyingEntities.erase(entityIt);
 					}
 					else {
 						entityIt++;
 					}
 				}
-
 				it = scoutedTreeIndices.erase(it);
 			}
 			else {

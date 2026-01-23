@@ -32,7 +32,7 @@ Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::
 
 	sm = new StateMachine<Worker>(collectingWoodState);
 
-	unitSpeed = 0.5f;
+	unitSpeed = 0.2f;
 }
 
 DecisionTreeNode<Worker>* IdleDecision::getBranch(Worker& worker) {
@@ -57,7 +57,7 @@ void CollectWoodAction::execute(Worker& worker) {
 	while (worker.currentPath.empty() || worker.connectionIdx >= (int)worker.currentPath.size()) {
 		Vector2 newTreePos = worker.mapReference->getNearestTreePos(worker);
 
-		if (Vector2Distance(worker.pos, newTreePos) < 0.1f) {
+		if (Vector2Distance(worker.pos, newTreePos) < 0.01f) {
 			return;
 		}
 
