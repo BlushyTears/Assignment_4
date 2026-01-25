@@ -43,7 +43,7 @@ void UnitBase::testTile() {
 					tile.hasBeenScouted = true;
 
 					if (tile.tileType == Trees)
-						mapReference->scoutedTreeIndices.push_back(ny * 100 + nx);
+						mapReference->scoutedTreeTileIndices.push_back(ny * 100 + nx);
 
 					if (tile.tileType == Grass || tile.tileType == Swamp || tile.tileType == Trees) {
 						mapReference->scoutedTiles->walkablePaths.push_back(tile.position);

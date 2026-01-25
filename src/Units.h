@@ -31,12 +31,11 @@ struct UnitBase {
 	Vector2 targetPos; // sub-goal in a path
 	Vector2 goalPos; // final goal in a path
 	// All units should be equally big so it's hard coded here
-	int size = 1;
-	float unitSpeed = 1.2f;
+	int size = 2;
+	float unitSpeed = 0.6f;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
 	int currentGoalTileIdx = 0;
-	bool shouldWander = true;
 
 	bool isTraining = false;
 	Map* mapReference = nullptr;

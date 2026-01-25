@@ -14,20 +14,18 @@ using std::string;
 // So we'll need a pool of timers associated with some form of result once the timer ends.
 struct Timer {
     float currTimePassed = 0;
-    bool timerFinished = false;
-    float timeCap = 1;
+    bool timerFinished = true;
 
     void setNewTimer(float _newCap) {
         timerFinished = false;
-        timeCap = _newCap;
-        currTimePassed = 0;
+        currTimePassed = _newCap;
     }
 
     void updateTimer() {
         if (!timerFinished) {
-            currTimePassed += GetFrameTime();
+            currTimePassed -= GetFrameTime();
 
-            if (currTimePassed >= timeCap) {
+            if (currTimePassed <= 0) {
                 timerFinished = true;
             }
         }
@@ -35,11 +33,6 @@ struct Timer {
 
     bool hasTimerEnded() {
         return timerFinished;
-    }
-        
-    void reset() {
-        currTimePassed = 0;
-        timerFinished = false;
     }
 };
 

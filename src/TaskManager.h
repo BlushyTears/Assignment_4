@@ -22,8 +22,6 @@ struct TaskManager {
 		units = _u;
 	}
 
-
-
 	void delegateTasks() {
 	
 	}

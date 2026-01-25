@@ -54,26 +54,39 @@ void IdleAction::execute(Worker& worker) {
 }
 
 void CollectWoodAction::execute(Worker& worker) {
-	while (worker.currentPath.empty() || worker.connectionIdx >= (int)worker.currentPath.size()) {
-		Vector2 newTreePos = worker.mapReference->getNearestTreePos(worker);
+	DrawText(to_string(worker.targetResourceTracker->treeCount).c_str(), 150, 1150, 24, PURPLE);
+	//DrawRectangle(worker.goalPos.x, worker.goalPos.y, TILE_SIZE / 2, TILE_SIZE / 2, BLUE);
 
-		if (Vector2Distance(worker.pos, newTreePos) < 0.01f) {
-			return;
+	if (worker.mapReference->fellTree(worker)) {
+		worker.targetResourceTracker->treeCount++;
+		int sameTileIdx = worker.treeTileTargetIdx;
+		worker.mapReference->removeTreeByIndex(worker.treeTileTargetIdx, worker.treeTargetIdx);
+		worker.treeTargetIdx = -1;
+		worker.treeTileTargetIdx = -1;
+		worker.currentPath.clear();
+		worker.connectionIdx = 0;
+
+		if (sameTileIdx != -1) {
+			for (auto& entity : worker.mapReference->renderedTiles[sameTileIdx].occupyingEntities) {
+				if (entity.entityType == eTree && !entity.reserved) {
+					entity.reserved = true;
+					worker.treeTargetIdx = entity.idx;
+					worker.treeTileTargetIdx = sameTileIdx;
+					worker.goalPos = worker.mapReference->renderedTiles[sameTileIdx].position + entity.tileOffset;
+					return;
+				}
+			}
 		}
+		worker.goalPos = Vector2{ -1, -1 };
+		return;
+	}
 
-		worker.goalPos = newTreePos;
+	worker.chopTimer.updateTimer();
+
+	if (worker.currentPath.empty()) {
+		worker.goalPos = worker.mapReference->getNearestTreePos(worker);
 		worker.calculateNewPath();
-
-		if (worker.currentPath.empty()) {
-			worker.mapReference->removeTreeAtPos(newTreePos);
-			continue;
-		}
-		else {
-			worker.connectionIdx = 0;
-			worker.targetPos.x = worker.currentPath[0].toNode.x;
-			worker.targetPos.y = worker.currentPath[0].toNode.y;
-			break;
-		}
+		if (worker.currentPath.empty()) return;
 	}
 
 	if (Vector2Distance(worker.pos, worker.targetPos) > 1.0f) {
@@ -82,22 +95,11 @@ void CollectWoodAction::execute(Worker& worker) {
 	}
 
 	worker.connectionIdx++;
-	if (worker.connectionIdx < (int)worker.currentPath.size()) {
-		worker.targetPos.x = worker.currentPath[worker.connectionIdx].toNode.x;
-		worker.targetPos.y = worker.currentPath[worker.connectionIdx].toNode.y;
-		return;
+	if (worker.connectionIdx < worker.currentPath.size()) {
+		worker.targetPos.x = (float)worker.currentPath[worker.connectionIdx].toNode.x;
+		worker.targetPos.y = (float)worker.currentPath[worker.connectionIdx].toNode.y;
 	}
-
-	if (worker.mapReference->fellTree(worker)) {
-		worker.targetResourceTracker->treeCount++;
-		worker.mapReference->removeTreeAtPos(worker.goalPos);
-	}
-
-	worker.currentPath.clear();
-	worker.connectionIdx = 0;
 }
-
-
 // Run fsm through here
 void Worker::commandUnit() {
 	plans = sm->update(*this);

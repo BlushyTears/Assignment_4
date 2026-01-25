@@ -7,11 +7,15 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 #include "GraphMap.h"
 #include "Units.h"
+#include "Worker.h"
 
 struct UnitBase;
+struct Worker;
+struct ResourceTracker;
 
 using namespace std;
 
@@ -33,20 +37,27 @@ enum EntityTypes {
 };
 
 struct Entity {
-	int count;
-
+	int idx;
 	EntityTypes entityType;
 	Vector2 tileOffset; // dont spawn all trees on same pixel pos etc (If it's iron ore we default to 0,0)
 	Color entityColor;
-	bool isOccupied = false;
+	bool reserved = false;
 
 	Entity() {}
 
 	Entity(int _c, EntityTypes _et, Vector2 _pos, Color _ec) {
-		count = _c;
+		idx = _c;
 		entityType = _et;
 		tileOffset = _pos;
 		entityColor = _ec;
+	}
+
+	bool operator ==(const Entity& other) const {
+		return idx == other.idx;
+	}
+
+	bool operator ==(int targetIdx) const {
+		return idx == targetIdx;
 	}
 };
 
@@ -72,7 +83,7 @@ struct Tile {
 				int x = getRandomNumber(1, _tileSize);
 				int y = getRandomNumber(1, _tileSize);
 
-				Entity entity(treeCount, eTree, Vector2{ (float)x, (float)y }, Color{100, 200, 25, 255});
+				Entity entity(i, eTree, Vector2{ (float)x, (float)y }, Color{100, 200, 25, 255});
 				occupyingEntities.push_back(entity);
 			}
 		}
@@ -86,104 +97,19 @@ struct Map {
 	ChartedMap* accessableTiles = nullptr;
 	ChartedMap* scoutedTiles = nullptr;
 
-	std::vector<MapIndex> scoutedTreeIndices; // Future tech for finding trees without looping through all tiles
-	std::vector<MapIndex> scoutedFelledTreeIndices; // Future tech for finding trees without looping through all tiles
+	std::vector<MapIndex> scoutedTreeTileIndices; // Future tech for finding trees without looping through all tiles
 	std::vector<MapIndex> ironOreIndices; // Future tech for finding ores without looping through all tiles
 	std::queue<UnitBase*> searchQueue; // Units that want to search the map currently.
 	int mapTileSize;
 
-	Vector2 getNearestTreePos(UnitBase& unit) {
-		int minTreeDist = std::numeric_limits<int>::max();
-		Vector2 nearestPos = unit.pos;
-		Entity* targetEntity = nullptr;
-
-		for (auto& treeTileIdx : scoutedTreeIndices) {
-			for (auto& tree : renderedTiles[treeTileIdx].occupyingEntities) {
-				if (tree.isOccupied || tree.entityType != eTree)
-					continue;
-
-				int dist = Vector2Length(unit.pos - renderedTiles[treeTileIdx].position);
-				if (dist < minTreeDist) {
-					minTreeDist = dist;
-					nearestPos = renderedTiles[treeTileIdx].position + tree.tileOffset;
-					targetEntity = &tree;
-				}
-			}
-		}
-
-		if (targetEntity) targetEntity->isOccupied = true;
-
-		return nearestPos;
-	}
-
+	Vector2 getNearestTreePos(Worker& unit);
 	// find closest scouted tree relative to unit and chop that down
-	bool fellTree(UnitBase& unit) {
-		int i = 0;
-		int minTreeDist = std::numeric_limits<int>::max();
-		int closestTreeIdx = -1;
-		float maxChopDistance = 25.0f;
-		std::vector<MapIndex> toRemove;
-
-		for (auto treeTileIdx : scoutedTreeIndices) {
-			bool tileHasTree = false;
-
-			for (auto& e : renderedTiles[treeTileIdx].occupyingEntities) {
-				if (e.entityType == eTree) {
-					tileHasTree = true;
-					break;
-				}
-			}
-
-			if (!tileHasTree) {
-				toRemove.push_back(treeTileIdx);
-				continue;
-			}
-
-			float dist = Vector2Length(unit.pos - renderedTiles[treeTileIdx].position);
-
-			if (dist < minTreeDist) {
-				minTreeDist = dist;
-				closestTreeIdx = treeTileIdx;
-			}
-		}
-
-		// there are no nearby trees to chop
-		if (closestTreeIdx == -1 || minTreeDist > maxChopDistance)
-			return false;
-
-		// successfully chopped down a tree on a tile
-		return true;
-	}
+	bool fellTree(Worker& unit);
 
 	//int getNearestOreIdx(UnitBase& unit) {
-
 	//}
-
-	void removeTreeAtPos(Vector2 treePos) {
-		for (auto it = scoutedTreeIndices.begin(); it != scoutedTreeIndices.end();) {
-			int idx = *it;
-			Tile& tile = renderedTiles[idx];
-
-			if (treePos.x >= tile.position.x && treePos.x < tile.position.x + mapTileSize &&
-				treePos.y >= tile.position.y && treePos.y < tile.position.y + mapTileSize) {
-
-				tile.tileType = Grass;
-
-				for (auto entityIt = tile.occupyingEntities.begin(); entityIt != tile.occupyingEntities.end(); ) {
-					if (entityIt->entityType == eTree || entityIt->entityType == eFelledTree) {
-						entityIt = tile.occupyingEntities.erase(entityIt);
-					}
-					else {
-						entityIt++;
-					}
-				}
-				it = scoutedTreeIndices.erase(it);
-			}
-			else {
-				it++;
-			}
-		}
-	}
+	// Todo: singular tree only
+	void removeTreeByIndex(int _treeTileTargetIdx, int _treeTargetIdx);
 
 	Map(stringstream& ss, int _screenWidth, int _tileSize) {
 		accessableTiles = new ChartedMap(ss.str(), _tileSize);

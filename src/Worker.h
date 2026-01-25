@@ -9,10 +9,13 @@
 #include <FSM.h>
 #include "Units.h"
 
+#include "Timer.h"
+
 // Since workers are so much more complex, they need their own header and FSM
 
 struct ResourceTracker;
 struct Worker;
+struct Timer;
 
 // Idle state stuff
 struct IdleAction : Action<Worker> {
@@ -82,6 +85,15 @@ struct Worker : UnitBase {
 
 	StateMachine<Worker>* sm;
 	std::vector<Action<Worker>*> plans;
+
+	Timer chopTimer;
+
+	int treeTileTargetIdx = 0; // which tree on some particular tile do we target (1-5)
+	int treeTargetIdx = 0; // which tree on some particular tile do we target (1-5)
+	bool isChoppingWood = false;
+
+	//MapIndex treeToChop;
+	//bool hasWoodLogs = false;
 
 	Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur);
 

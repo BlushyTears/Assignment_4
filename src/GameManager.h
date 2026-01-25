@@ -122,7 +122,7 @@ struct Game {
 			targetResourceCount->scoutCount++;
 			return EnumScout;
 		}
-		else if (targetResourceCount->coalMinerCount < 3) {
+		else if (targetResourceCount->coalMinerCount < 0) {
 			targetResourceCount->coalMinerCount++;
 			return EnumCoalMiner;
 		}
