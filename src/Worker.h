@@ -88,8 +88,8 @@ struct Worker : UnitBase {
 
 	Timer chopTimer;
 
-	int treeTileTargetIdx = 0; // which tree on some particular tile do we target (1-5)
-	int treeTargetIdx = 0; // which tree on some particular tile do we target (1-5)
+	int treeTileTargetIdx = -1; // which tree on some particular tile do we target (1-5)
+	int treeTargetIdx = -1; // which tree on some particular tile do we target (1-5)
 	bool isChoppingWood = false;
 
 	//MapIndex treeToChop;

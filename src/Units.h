@@ -31,7 +31,7 @@ struct UnitBase {
 	Vector2 targetPos; // sub-goal in a path
 	Vector2 goalPos; // final goal in a path
 	// All units should be equally big so it's hard coded here
-	int size = 2;
+	float size = 1.0f;
 	float unitSpeed = 0.6f;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
@@ -64,7 +64,7 @@ struct UnitBase {
 			pos += Vector2Normalize(targetPos - pos) * unitSpeed;
 		}
 
-		float minDist = (float)size * 2.0f;
+		float minDist = size * 2.0f;
 
 		// avoid collision with other agents
 		for (auto& unit : *_unitsReference) {

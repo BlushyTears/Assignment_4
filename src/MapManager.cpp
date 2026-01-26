@@ -14,7 +14,7 @@ bool Map::fellTree(Worker& unit) {
     for (auto& entity : entities) {
         if (entity.idx == unit.treeTargetIdx && entity.entityType == eTree) {
             Vector2 treePos = renderedTiles[unit.treeTileTargetIdx].position + entity.tileOffset;
-            if (Vector2Length(unit.pos - treePos) <= 10.5f) {
+            if (Vector2Length(unit.pos - treePos) <= 12.5f) {
                 unit.isChoppingWood = true;
                 unit.chopTimer.setNewTimer(3);
             }
