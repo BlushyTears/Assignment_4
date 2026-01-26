@@ -12,7 +12,6 @@
 
 #include "raylib.h"
 #include "MapManager.h"
-#include "TaskManager.h"
 #include "Timer.h"
 
 constexpr int SCREEN_WIDTH = 1000;
@@ -79,7 +78,6 @@ struct Game {
 	stringstream mapData;
 	// todo: turn these into smart pointers
 	Map* map = nullptr; 
-	//TaskManager* tm = nullptr;
 	ResourceTracker* targetResourceCount = nullptr; // used so not all units do the same thing
 	ResourceTracker* actualResourceCount = nullptr;
 	std::vector<std::unique_ptr<UnitBase>> units;
