@@ -54,7 +54,6 @@ void IdleAction::execute(Worker& worker) {
 }
 
 void CollectWoodAction::execute(Worker& worker) {
-	DrawText(to_string(worker.targetResourceTracker->treeCount).c_str(), 150, 1150, 24, PURPLE);
 	//DrawRectangle(worker.goalPos.x, worker.goalPos.y, TILE_SIZE / 2, TILE_SIZE / 2, BLUE);
 
 	if (worker.mapReference->fellTree(worker)) {

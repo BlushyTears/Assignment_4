@@ -14,6 +14,8 @@
 #include "MapManager.h"
 #include "Timer.h"
 
+#include "Building.h"
+
 constexpr int SCREEN_WIDTH = 1000;
 constexpr int SCREEN_HEIGHT = 1200;
 constexpr int TILE_SIZE = 10;
@@ -82,6 +84,7 @@ struct Game {
 	ResourceTracker* actualResourceCount = nullptr;
 	std::vector<std::unique_ptr<UnitBase>> units;
 	std::vector<Event> trainingUnits;
+	std::vector<Building*> buildings;
 
 	int initialFormationColumns = 11;
 	int xCount = 1;
@@ -112,6 +115,11 @@ struct Game {
 
 			units[i]->testTile();
 		}
+
+		// Create buildings
+		Vector2 pos = { (float)baseXUnitSpawn * 2, (float)baseYUnitSpawn };
+		CoalMile* cm = new CoalMile({ pos }, targetResourceCount, TILE_SIZE);
+		buildings.push_back(cm);
 	}
 
 	// This effectively our brain for deciding units to train
@@ -207,11 +215,21 @@ struct Game {
 		}
 	}
 
+	void callBuildings() {
+		for (auto& building : buildings) {
+			//building->update();
+			building->draw();
+		}
+	}
+
 	void debugText() {
 		int fps = GetFPS();
-		string fpsString = to_string(fps);
+		string fpsString = "FPS: " + to_string(fps);
 		const char* fpsChar = fpsString.c_str();
 		DrawText(fpsChar, 20, 1050, 24, GREEN);
+
+		string TreeCount = "Trees: " + to_string(targetResourceCount->treeCount);
+		DrawText(TreeCount.c_str(), 20, 1080, 24, PURPLE);
 	}
 
 	void update() {
@@ -225,5 +243,6 @@ struct Game {
 		map->renderMap(SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE);
 		callUnits();
 		updateTrainingUnits();
+		callBuildings();
 	}
 };
