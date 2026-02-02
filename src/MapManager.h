@@ -13,9 +13,12 @@
 #include "Units.h"
 #include "Worker.h"
 
+#include "Building.h"
+
 struct UnitBase;
 struct Worker;
 struct ResourceTracker;
+struct Building;
 
 using namespace std;
 
@@ -100,11 +103,13 @@ struct Map {
 	std::vector<MapIndex> scoutedTreeTileIndices; // Future tech for finding trees without looping through all tiles
 	std::vector<MapIndex> ironOreIndices; // Future tech for finding ores without looping through all tiles
 	std::queue<UnitBase*> searchQueue; // Units that want to search the map currently.
+
+	std::vector<Building*> buildings;
 	int mapTileSize;
 
 	Vector2 getNearestTreePos(Worker& unit);
 	// find closest scouted tree relative to unit and chop that down
-	bool fellTree(Worker& unit);
+	bool tryToFellTree(Worker& unit);
 
 	//int getNearestOreIdx(UnitBase& unit) {
 	//}
@@ -179,22 +184,8 @@ struct Map {
 		}
 	}
 
-	void renderMap(int _screenWidth, int _screenHeight, int _tileSize) {
-		// make this const reference whenever other thing runs im working on
-		for (auto const& tile : renderedTiles) {
-			if (!tile.hasBeenScouted) {
-				DrawRectangle(tile.position.x, tile.position.y, _tileSize, _tileSize, GRAY);
-			}
-			else {
-				DrawRectangle(tile.position.x, tile.position.y, _tileSize, _tileSize, tile.tileColor);
-				for (auto& entity : tile.occupyingEntities) {
-					DrawRectangle(	tile.position.x + entity.tileOffset.x,
-									tile.position.y + entity.tileOffset.y,
-									_tileSize / 8, _tileSize / 8, { entity.entityColor });
-				}
-			}
-		}
-	}
+	void drawBuildings();
+	void renderMap(int _screenWidth, int _screenHeight, int _tileSize);
 };
 
 inline stringstream transcribeData(const string& _path) {

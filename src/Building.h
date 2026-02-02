@@ -9,8 +9,11 @@
 #include "MapManager.h"
 #include "Timer.h"
 
+#include "Worker.h"
+
 struct ResourceTracker;
 struct Timer;
+struct Worker;
 
 struct Building {
 	Vector2 pos;
@@ -36,6 +39,8 @@ struct CoalMile : Building {
 	}
 
 	void update() override {
+		debugText();
+
 		if (!timer.hasTimerEnded() && isActive) {
 			timer.updateTimer();
 			return;
@@ -50,9 +55,15 @@ struct CoalMile : Building {
 			else if(isActive) {
 				treeCount -= 10;
 				coalCount++;
+				treeCount--;
 				isActive = false;
 			}
 		}
+	}
+
+	void putTreeInCoalMile(Worker& worker) {
+		treeCount++;
+		std::cout << "Worker put in tree in coal mile";
 	}
 
 	void draw() override {
@@ -63,5 +74,10 @@ struct CoalMile : Building {
 			DrawRectangle(this->pos.x, this->pos.y, tileSize, tileSize, BLACK);
 			DrawRectangle(this->pos.x, this->pos.y, tileSize, tileSize, DARKGRAY);
 		}
+	}
+
+	void debugText() {
+		string TreeCount = "Trees in coal mile: " + to_string(treeCount);
+		DrawText(TreeCount.c_str(), 20, 1080, 24, PURPLE);
 	}
 };

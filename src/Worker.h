@@ -10,12 +10,14 @@
 #include "Units.h"
 
 #include "Timer.h"
+#include "Building.h"
 
-// Since workers are so much more complex, they need their own header and FSM
+// Note: Since workers are so much more complex, they need their own header and FSM
 
 struct ResourceTracker;
 struct Worker;
 struct Timer;
+struct Building;
 
 // Idle state stuff
 struct IdleAction : Action<Worker> {
@@ -86,19 +88,26 @@ struct Worker : UnitBase {
 	StateMachine<Worker>* sm;
 	std::vector<Action<Worker>*> plans;
 
+	std::vector<Building*>& buildings;
+
 	Timer chopTimer;
 
 	int treeTileTargetIdx = -1; // which tree on some particular tile do we target (1-5)
 	int treeTargetIdx = -1; // which tree on some particular tile do we target (1-5)
 	bool isChoppingWood = false;
+	bool isCarryingWood = false;
 
 	//MapIndex treeToChop;
 	//bool hasWoodLogs = false;
 
-	Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur);
+	Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu);
 
 	void commandUnit() override;
 	void renderUnit() {
+		if (isCarryingWood) {
+			DrawCircle(pos.x + size, pos.y + size, size, BROWN);
+		}
+
 		DrawCircle(pos.x, pos.y, size, RED);
 	};
 	void calculateNewPath() override;

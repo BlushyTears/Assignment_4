@@ -1,6 +1,6 @@
 #include "MapManager.h"
 
-bool Map::fellTree(Worker& unit) {
+bool Map::tryToFellTree(Worker& unit) {
     if (unit.treeTileTargetIdx == -1 || unit.treeTargetIdx == -1) 
         return false;
     if (unit.isChoppingWood && !unit.chopTimer.hasTimerEnded()) 
@@ -62,7 +62,31 @@ Vector2 Map::getNearestTreePos(Worker& unit) {
 }
 
 void Map::removeTreeByIndex(int _treeTileTargetIdx, int _treeTargetIdx) {
-    if (_treeTileTargetIdx == -1 || _treeTargetIdx == -1) return;
+    if (_treeTileTargetIdx == -1 || _treeTargetIdx == -1) 
+        return;
     auto& tile = renderedTiles[_treeTileTargetIdx].occupyingEntities;
     tile.erase(std::remove(tile.begin(), tile.end(), _treeTargetIdx), tile.end());
+}
+
+void Map::drawBuildings() {
+    for (auto& building : this->buildings) {
+        building->draw();
+    }
+}
+
+void Map::renderMap(int _screenWidth, int _screenHeight, int _tileSize) {
+    // make this const reference whenever other thing runs im working on
+    for (auto const& tile : renderedTiles) {
+        if (!tile.hasBeenScouted) {
+            DrawRectangle(tile.position.x, tile.position.y, _tileSize, _tileSize, GRAY);
+        }
+        else {
+            DrawRectangle(tile.position.x, tile.position.y, _tileSize, _tileSize, tile.tileColor);
+            for (auto& entity : tile.occupyingEntities) {
+                DrawRectangle(tile.position.x + entity.tileOffset.x,
+                    tile.position.y + entity.tileOffset.y,
+                    _tileSize / 8, _tileSize / 8, { entity.entityColor });
+            }
+        }
+    }
 }
