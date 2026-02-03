@@ -207,6 +207,7 @@ void Builder::commandUnit() {
 				if (!this->targetBuilding->isBuilt && !this->targetBuilding->isBuilding) {
 					this->targetBuilding->isBuilding = true;
 					this->targetBuilding->buildTimer.setNewTimer(5);
+					this->targetBuilding->startBuildProcess();
 				}
 
 				if (this->targetBuilding->isBuilding) {

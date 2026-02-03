@@ -48,7 +48,7 @@ struct ResourceTracker {
 };
 
 // Final hybrid-based design for units:
-// Units act as autonomous agents and can affect internal state. They will do things like find wood
+// Units act as autonomous agents and can affect internal state. They will do things like find Iron
 // Houses are treated like permanent resources managed by the game manager (Only exception is that game manager might need to hard code the worker's targetPos)
 // Game manager is responsible for training units whenever X amount of resources are available. This is done with a hard-coded fsm or a set of tailed if-else statements
 // The benefit of this design amongst other things is that game manager can disable units from performing other actions while it's being converted
@@ -112,6 +112,6 @@ struct Game {
 		int fps = GetFPS();
 		string fpsString = "FPS: " + to_string(fps);
 		const char* fpsChar = fpsString.c_str();
-		DrawText(fpsChar, 20, 1050, 24, GREEN);
+		DrawText(fpsChar, 120, 120, 24, RED);
 	}
 };

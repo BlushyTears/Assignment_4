@@ -72,18 +72,49 @@ struct CollectWoodDecision : Decision<Worker> {
 	DecisionTreeNode<Worker>* getBranch(Worker& worker) override;
 };
 
+// Collecting iron
+struct CollectIronAction : Action<Worker> {
+	// In here we set targetPos to nearest tree, go there and collect Iron
+	void execute(Worker& worker) override;
+};
+
+struct CollectIronState : State<Worker> {
+	CollectIronAction collectingIron;
+	std::vector<Transition<Worker>*> transitions;
+
+	std::vector<Action<Worker>*> getActions() override { return { &collectingIron }; };
+	std::vector<Transition<Worker>*> getTransitions() override { return transitions; };
+};
+
+struct TargetCollectIronState : TargetState<Worker> {
+	CollectIronState* collectIronState;
+
+	TargetCollectIronState(CollectIronState* s) : collectIronState(s) {}
+
+	std::vector<Action<Worker>*> getActions() override { return {}; }
+	State<Worker>* getTargetState() override { return collectIronState; }
+};
+
+struct CollectIronDecision : Decision<Worker> {
+	DecisionTreeNode<Worker>* getBranch(Worker& worker) override;
+};
+
 struct Worker : UnitBase {
 	IdleState* idelingState;
 	CollectWoodState* collectingWoodState;
+	CollectIronState* collectingIronState;
 
 	TargetIdleState* targetIdeling;
 	TargetCollectWoodState* targetWoodcutting;
+	TargetCollectIronState* targetIronCollecting;
 
 	IdleDecision* idleCheck;
 	CollectWoodDecision* collectWoodCheck;
+	CollectIronDecision* collectIronCheck;
 
 	DecisionTreeTransition<Worker>* toIdle;
 	DecisionTreeTransition<Worker>* toWoodcutting;
+	DecisionTreeTransition<Worker>* toIronCollecting;
 
 	StateMachine<Worker>* sm;
 	std::vector<Action<Worker>*> plans;

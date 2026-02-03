@@ -50,7 +50,7 @@ void Game::startTrainingUnits(UnitToTrain unitType) {
 }
 
 UnitToTrain Game::getNextUnitToTrain() {
-	if (targetResourceCount->scoutCount < 5) {
+	if (targetResourceCount->scoutCount < 8) {
 		targetResourceCount->scoutCount++;
 		return EnumScout;
 	}
@@ -129,43 +129,42 @@ void Game::convertUnit(UnitBase* unitPtr, UnitToTrain unitType) {
 
 // Idea: Spawn buildings once we have dicovered enough terrain to practically place them close to each other with some variety
 void Game::spawnBuildings() {
-	//Vector2 pos = { (float)baseXUnitSpawn * 2, (float)baseYUnitSpawn };
 	if (gameMap->scoutedTiles->walkablePaths.size() < 100)
 		return;
+
 	bool hasFoundGoodLand = false;
 
 	while (!hasFoundGoodLand) {
 		int randomNodeIdx = getRandomNumber(0, (gameMap->renderedTiles.size() - 1));
-
-		Tile tile = gameMap->renderedTiles[randomNodeIdx];
+		Tile& tile = gameMap->renderedTiles[randomNodeIdx];
 
 		if (!tile.hasBeenScouted || tile.tileType != Grass)
 			continue;
 
+		bool occupied = false;
+		for (auto* b : gameMap->buildings) {
+			if (Vector2Distance(tile.position, b->pos) < TILE_SIZE) {
+				occupied = true;
+				break;
+			}
+		}
+
+		if (occupied)
+			continue;
+
+		hasFoundGoodLand = true;
+		if (targetResourceCount->coalCount == 0) {
+			CoalMile* cm = new CoalMile({ tile.position.x, tile.position.y }, targetResourceCount, TILE_SIZE);
+			gameMap->buildings.push_back(cm);
+			targetResourceCount->coalCount++;
+		}
+		else if (targetResourceCount->smelterBuildingCount == 0) {
+			Smelter* s = new Smelter({ tile.position.x, tile.position.y }, targetResourceCount, TILE_SIZE);
+			gameMap->buildings.push_back(s);
+			targetResourceCount->smelterBuildingCount++;
+		}
 		else {
-			hasFoundGoodLand = true;
-			if (targetResourceCount->coalCount == 0) {
-				CoalMile* cm = new CoalMile({ tile.position.x, tile.position.y }, targetResourceCount, TILE_SIZE);
-				gameMap->buildings.push_back(cm);
-				targetResourceCount->coalCount++;
-			}
-			// For future use
-			//else if (targetResourceCount->smelterBuildingCount == 0) {
-			//	CoalMile* cm = new CoalMile({ tile.position.x, tile.position.y }, targetResourceCount, TILE_SIZE);
-			//	gameMap->buildings.push_back(cm);
-			//}
-			//else if (targetResourceCount->armsForgeCount == 0) {
-			//	CoalMile* cm = new CoalMile({ tile.position.x, tile.position.y }, targetResourceCount, TILE_SIZE);
-			//	gameMap->buildings.push_back(cm);
-			//}
-			//else if (targetResourceCount->trainingCamp == 0) {
-			//	CoalMile* cm = new CoalMile({ tile.position.x, tile.position.y }, targetResourceCount, TILE_SIZE);
-			//	gameMap->buildings.push_back(cm);
-			//}
-			else {
-				// We're done with stage 1
-				return;
-			}
+			return;
 		}
 	}
 }
