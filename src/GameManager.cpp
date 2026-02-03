@@ -37,6 +37,7 @@ void Game::startTrainingUnits(UnitToTrain unitType) {
 		switch (unitType) {
 			case EnumScout: trainTime = 3.0f; break;
 			case EnumCoalMiner: trainTime = 3.0f; break;
+			case EnumBuilder: trainTime = 3.0f; break;
 		}
 
 		if (worker && !worker->isTraining) {
@@ -53,9 +54,13 @@ UnitToTrain Game::getNextUnitToTrain() {
 		targetResourceCount->scoutCount++;
 		return EnumScout;
 	}
-	else if (targetResourceCount->coalMinerCount < 0) {
+	else if (targetResourceCount->coalMinerCount < 1) {
 		targetResourceCount->coalMinerCount++;
 		return EnumCoalMiner;
+	}
+	else if (targetResourceCount->builderCount < 1) {
+		targetResourceCount->builderCount++;
+		return EnumBuilder;
 	}
 	return EnumNone;
 }
@@ -102,12 +107,16 @@ void Game::convertUnit(UnitBase* unitPtr, UnitToTrain unitType) {
 
 			switch (unitType) {
 			case EnumScout:
-				unit = std::make_unique<Scout>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units);
+				unit = std::make_unique<Scout>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
 				actualResourceCount->scoutCount++;
 				break;
 			case EnumCoalMiner:
-				unit = std::make_unique<CoalWorker>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units);
+				unit = std::make_unique<CoalWorker>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
 				actualResourceCount->coalMinerCount++;
+				break;
+			case EnumBuilder:
+				unit = std::make_unique<Builder>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
+				actualResourceCount->builderCount++;
 				break;
 			case EnumNone:
 				break;

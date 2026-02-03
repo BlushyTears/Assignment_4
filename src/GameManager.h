@@ -61,9 +61,9 @@ enum UnitToTrain {
 	EnumNone,
 	EnumScout,
 	EnumCoalMiner,
+	EnumBuilder,
 	EnumArmSmith,
 	EnumSmelter,
-	EnumBuilder,
 	EnumSoldier
 };
 

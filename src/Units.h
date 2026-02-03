@@ -25,6 +25,7 @@ struct Map;
 struct Tile;
 struct Connection;
 struct ResourceTracker;
+struct Building;
 
 struct UnitBase {
 	Vector2 pos; // current pos
@@ -44,8 +45,9 @@ struct UnitBase {
 	std::vector<Tile>* renderedTiles;
 	ResourceTracker* targetResourceTracker = nullptr;
 	std::vector<std::unique_ptr<UnitBase>>* _unitsReference = nullptr;
+	std::vector<Building*>& buildings;
 
-	UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur);
+	UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu);
 	bool isAwaitingNewPath = false;
 
 	void moveFile();
@@ -83,7 +85,8 @@ struct UnitBase {
 
 // Scout can be created with 1 worker
 struct Scout : UnitBase {
-	Scout(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur) : UnitBase(_x, _y, _mp, _rt, _ur) {}
+	Scout(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu) 
+		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {}
 	void renderUnit() {
 		DrawCircle(pos.x, pos.y, size, BLUE);
 	}
@@ -92,11 +95,24 @@ struct Scout : UnitBase {
 };
 
 struct CoalWorker : UnitBase {
-	CoalWorker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur) : UnitBase(_x, _y, _mp, _rt, _ur) {}
+	CoalWorker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu) 
+		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {}
 
 	void commandUnit() override;
 	void renderUnit() {
 		DrawCircle(pos.x, pos.y, size, DARKGRAY);
+	};
+	void calculateNewPath() override;
+};
+
+struct Builder : UnitBase {
+	Builder(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu) 
+		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {}
+
+	Building* targetBuilding = nullptr;
+	void commandUnit() override;
+	void renderUnit() {
+		DrawCircle(pos.x, pos.y, size, PINK);
 	};
 	void calculateNewPath() override;
 };

@@ -7,7 +7,7 @@
 
 // set up fsm here
 Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu) 
-	: UnitBase(_x, _y, _mp, _rt, _ur), buildings(_bu) {
+	: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {
 	idelingState = new IdleState();
 	collectingWoodState = new CollectWoodState();
 

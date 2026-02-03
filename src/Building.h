@@ -17,7 +17,11 @@ struct Worker;
 
 struct Building {
 	Vector2 pos;
-	Timer timer;
+	Timer produceTimer;
+	Timer buildTimer;
+	bool isBuilt = false;
+	bool isBuilding = false;
+	bool materialsAvailable = false;
 
 	virtual void update() = 0;
 	virtual void draw() = 0;
@@ -29,7 +33,6 @@ struct CoalMile : Building {
 	int treeCount = 0;
 	int coalCount = 0;
 	int minTreesNeeded = 10;
-	bool isBuilt = false;
 	bool isActive = false;
 
 	CoalMile(Vector2 _pos, ResourceTracker* _rt, int _tileSize) {
@@ -41,15 +44,19 @@ struct CoalMile : Building {
 	void update() override {
 		debugText();
 
-		if (!timer.hasTimerEnded() && isActive) {
-			timer.updateTimer();
+		if (treeCount >= minTreesNeeded) {
+			materialsAvailable = true;
+		}
+
+		if (!produceTimer.hasTimerEnded() && isActive) {
+			produceTimer.updateTimer();
 			return;
 		}
-		else if (timer.hasTimerEnded()) {
+		else if (produceTimer.hasTimerEnded()) {
 			// if we aren't smelting (This should be guaranteed to run once)
 			if (!isActive && treeCount >= minTreesNeeded) {
 				isActive = true;
-				timer.setNewTimer(6);
+				produceTimer.setNewTimer(6);
 			}
 			// if we are done smelting our current batch
 			else if(isActive) {
@@ -63,7 +70,6 @@ struct CoalMile : Building {
 
 	void putTreeInCoalMile(Worker& worker) {
 		treeCount++;
-		std::cout << "Worker put in tree in coal mile";
 	}
 
 	void draw() override {

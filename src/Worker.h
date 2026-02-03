@@ -88,8 +88,6 @@ struct Worker : UnitBase {
 	StateMachine<Worker>* sm;
 	std::vector<Action<Worker>*> plans;
 
-	std::vector<Building*>& buildings;
-
 	Timer chopTimer;
 
 	int treeTileTargetIdx = -1; // which tree on some particular tile do we target (1-5)

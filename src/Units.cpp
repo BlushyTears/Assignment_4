@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-UnitBase::UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur) {
+UnitBase::UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu) : buildings(_bu) {
 	pos.x = _x;
 	pos.y = _y;
 	targetPos = pos;
@@ -148,6 +148,82 @@ void CoalWorker::commandUnit() {
 		if (connectionIdx >= currentPath.size() - 1) {
 			currentPath.clear();
 			connectionIdx = 0;
+		}
+	}
+}
+
+void Builder::calculateNewPath() {
+	auto ref = mapReference->scoutedTiles;
+
+	if (targetBuilding != nullptr) {
+
+		this->currentTileIdx = getcurrentCorrespondingTile(mapReference->scoutedTiles->walkablePaths, this->pos);
+		this->currentGoalTileIdx = getcurrentCorrespondingTile(mapReference->scoutedTiles->walkablePaths, this->targetBuilding->pos);
+
+		currentPath = ref->AStar(
+			ref->walkablePaths[this->currentTileIdx],
+			ref->walkablePaths[this->currentGoalTileIdx],
+			ref->walkablePathsNeighboors);
+	}
+
+	UnitBase::calculateNewPath();
+}
+
+void Builder::commandUnit() {
+	if (targetBuilding == nullptr) {
+		for (auto& building : this->buildings) {
+			if (!building->isBuilt) {
+				this->targetBuilding = building;
+				break;
+			}
+		}
+	}
+
+	if (targetBuilding != nullptr) {
+		if (currentPath.size() == 0) {
+			AwaitNewPath();
+		}
+		else {
+			if (Vector2Distance(pos, targetPos) > 10) {
+				moveUnitTowardsInternalGoal();
+			}
+
+			if (Vector2Distance(pos, targetPos) < 5) {
+				if (connectionIdx < (int)currentPath.size()) {
+					targetPos.x = (float)currentPath[connectionIdx].toNode.x;
+					targetPos.y = (float)currentPath[connectionIdx].toNode.y;
+					connectionIdx++;
+				}
+			}
+
+			if (connectionIdx >= (int)currentPath.size()) {
+				CoalMile* coalMile = dynamic_cast<CoalMile*>(targetBuilding);
+				if (coalMile != nullptr && !coalMile->isBuilt) {
+					if (coalMile->treeCount < coalMile->minTreesNeeded) {
+						return;
+					}
+				}
+
+				if (!this->targetBuilding->isBuilt && !this->targetBuilding->isBuilding) {
+					this->targetBuilding->isBuilding = true;
+					this->targetBuilding->buildTimer.setNewTimer(5);
+				}
+
+				if (this->targetBuilding->isBuilding) {
+					this->targetBuilding->buildTimer.updateTimer();
+
+					if (this->targetBuilding->buildTimer.hasTimerEnded()) {
+						this->targetBuilding->isBuilt = true;
+						this->targetBuilding->isBuilding = false;
+						this->targetBuilding = nullptr;
+						currentPath.clear();
+						connectionIdx = 0;
+					}
+					else {
+						return;
+					}
+				}
+			}
 		}
 	}
 }

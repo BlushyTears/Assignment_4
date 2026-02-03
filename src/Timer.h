@@ -35,5 +35,3 @@ struct Timer {
         return timerFinished;
     }
 };
-
-
