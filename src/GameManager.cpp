@@ -163,6 +163,16 @@ void Game::spawnBuildings() {
 			gameMap->buildings.push_back(s);
 			targetResourceCount->smelterBuildingCount++;
 		}
+		else if (targetResourceCount->armsmithForgeCount == 0) {
+			ArmSmith* s = new ArmSmith({ tile.position.x, tile.position.y }, targetResourceCount, TILE_SIZE);
+			gameMap->buildings.push_back(s);
+			targetResourceCount->armsmithForgeCount++;
+		}
+		else if (targetResourceCount->trainingCamp == 0) {
+			TrainingCamp* s = new TrainingCamp({ tile.position.x, tile.position.y }, targetResourceCount, TILE_SIZE);
+			gameMap->buildings.push_back(s);
+			targetResourceCount->trainingCamp++;
+		}
 		else {
 			return;
 		}

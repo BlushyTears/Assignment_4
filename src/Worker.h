@@ -125,16 +125,21 @@ struct Worker : UnitBase {
 	int treeTargetIdx = -1; // which tree on some particular tile do we target (1-5)
 	bool isChoppingWood = false;
 	bool isCarryingWood = false;
+	bool isCarryingIron = false;
 
 	//MapIndex treeToChop;
 	//bool hasWoodLogs = false;
 
 	Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu);
+	~Worker();
 
 	void commandUnit() override;
 	void renderUnit() {
 		if (isCarryingWood) {
 			DrawCircle(pos.x + size, pos.y + size, size, BROWN);
+		}
+		if (isCarryingIron) {
+			DrawCircle(pos.x + size, pos.y + size, size, BLACK);
 		}
 
 		DrawCircle(pos.x, pos.y, size, RED);

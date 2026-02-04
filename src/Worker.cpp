@@ -47,6 +47,25 @@ Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::
 	unitSpeed = 0.2f;
 }
 
+Worker::~Worker() {
+	delete sm;
+
+	delete toIdle;
+	delete toWoodcutting;
+	delete toIronCollecting;
+
+	delete idleCheck;
+	delete collectWoodCheck;
+	delete collectIronCheck;
+
+	delete targetIdeling;
+	delete targetWoodcutting;
+	delete targetIronCollecting;
+
+	delete idelingState;
+	delete collectingWoodState;
+	delete collectingIronState;
+}
 
 DecisionTreeNode<Worker>* IdleDecision::getBranch(Worker& worker) {
 	if (worker.targetResourceTracker->treeCount > 500 && worker.targetResourceTracker->ironOreCount > 50 && !worker.isCarryingWood) {
@@ -101,7 +120,8 @@ void CollectWoodAction::execute(Worker& worker) {
 			targetBuilding = primaryCoalMile;
 		}
 
-		if (!targetBuilding) return;
+		if (!targetBuilding) 
+			return;
 
 		Vector2 buildingCenter = {
 			targetBuilding->pos.x + (targetBuilding->tileSize / 2.0f),
@@ -185,9 +205,81 @@ void CollectWoodAction::execute(Worker& worker) {
 }
 
 void CollectIronAction::execute(Worker& worker) {
-	worker.goalPos = Vector2{ 500, 500 };
+	if (worker.isCarryingIron) {
+		if (worker.buildings.empty()) return;
+		Smelter* targetSmelter = nullptr;
+		for (auto& building : worker.buildings) {
+			if (Smelter* s = dynamic_cast<Smelter*>(building)) {
+				targetSmelter = s;
+				break;
+			}
+		}
+		if (!targetSmelter) return;
+		Vector2 bCenter = { targetSmelter->pos.x + (targetSmelter->tileSize / 2.0f), targetSmelter->pos.y + (targetSmelter->tileSize / 2.0f) };
+		if (worker.goalPos.x != bCenter.x || worker.goalPos.y != bCenter.y) {
+			worker.currentPath.clear();
+			worker.goalPos = bCenter;
+		}
+		if (Vector2Distance(worker.pos, bCenter) < 2.0f) {
+			worker.isCarryingIron = false;
+			worker.currentPath.clear();
+			worker.connectionIdx = 0;
+			worker.goalPos = { -1, -1 };
+			targetSmelter->ironOreCount++;
+			return;
+		}
+		if (worker.currentPath.empty()) {
+			worker.calculateNewPath();
+			return;
+		}
+	}
+	else {
+		if (worker.goalPos.x != -1 && Vector2Distance(worker.pos, worker.goalPos) < 2.0f) {
+			for (int i = 0; i < (int)worker.mapReference->ironOreIndices.size(); i++) {
+				int tileIdx = worker.mapReference->ironOreIndices[i].first;
+				if (worker.mapReference->renderedTiles[tileIdx].position.x == worker.goalPos.x &&
+					worker.mapReference->renderedTiles[tileIdx].position.y == worker.goalPos.y) {
 
-	DrawCircle(500, 500, 25, RED);
+					auto& entities = worker.mapReference->renderedTiles[tileIdx].occupyingEntities;
+					for (int j = 0; j < (int)entities.size(); j++) {
+						if (entities[j].entityType == eIronOre) {
+							entities.erase(entities.begin() + j);
+							break;
+						}
+					}
+					break;
+				}
+			}
+			worker.isCarryingIron = true;
+			worker.targetResourceTracker->ironOreCount++;
+			worker.currentPath.clear();
+			worker.connectionIdx = 0;
+			worker.goalPos = { -1, -1 };
+			return;
+		}
+		if (worker.goalPos.x == -1) {
+			for (int i = 0; i < (int)worker.mapReference->ironOreIndices.size(); i++) {
+				if (worker.mapReference->ironOreIndices[i].second == true) {
+					worker.goalPos = worker.mapReference->renderedTiles[worker.mapReference->ironOreIndices[i].first].position;
+					worker.mapReference->ironOreIndices[i].second = false;
+					break;
+				}
+			}
+		}
+		if (worker.currentPath.empty() && worker.goalPos.x != -1) {
+			worker.calculateNewPath();
+			if (worker.currentPath.empty()) return;
+		}
+	}
+	if (Vector2Distance(worker.pos, worker.targetPos) > 1.0f) worker.moveUnitTowardsInternalGoal();
+	else {
+		if (worker.connectionIdx < (int)worker.currentPath.size()) {
+			worker.targetPos.x = (float)worker.currentPath[worker.connectionIdx].toNode.x;
+			worker.targetPos.y = (float)worker.currentPath[worker.connectionIdx].toNode.y;
+			worker.connectionIdx++;
+		}
+		else if (worker.goalPos.x != -1) worker.targetPos = worker.goalPos;
+	}
 }
 
 // Run fsm through here

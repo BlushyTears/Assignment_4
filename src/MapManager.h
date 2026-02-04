@@ -101,7 +101,7 @@ struct Map {
 	ChartedMap* scoutedTiles = nullptr;
 
 	std::vector<MapIndex> scoutedTreeTileIndices; // Future tech for finding trees without looping through all tiles
-	std::vector<MapIndex> ironOreIndices; // Future tech for finding ores without looping through all tiles
+	std::vector<std::pair<MapIndex, bool>> ironOreIndices; // Future tech for finding ores without looping through all tiles
 	std::queue<UnitBase*> searchQueue; // Units that want to search the map currently.
 
 	std::vector<Building*> buildings;
@@ -179,7 +179,7 @@ struct Map {
 				int entityCount = 1; // This should be read externally
 				Entity entity(entityCount, eIronOre, {0, 0}, Color{ 10, 10, 10, 255 });
 				renderedTiles[randomTileIdx].occupyingEntities.push_back(entity);
-				ironOreIndices.push_back(randomTileIdx);
+				ironOreIndices.push_back({ randomTileIdx, true });
 			}
 		}
 	}

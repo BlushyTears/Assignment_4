@@ -4,9 +4,8 @@
 void CoalMile::update() {
 	debugText();
 
-	materialsAvailable = (treeCount >= minTreesNeeded);
-
-	if (!isBuilt) return;
+	if (!isBuilt) 
+		return;
 
 	if (isActive) {
 		produceTimer.updateTimer();
@@ -16,7 +15,7 @@ void CoalMile::update() {
 			isActive = false;
 		}
 	}
-	else if (treeCount >= minTreesNeeded) {
+	else if (treeCount >= costPerCoal) {
 		isActive = true;
 		treeCount -= costPerCoal;
 		produceTimer.setNewTimer(6);
@@ -26,21 +25,21 @@ void CoalMile::update() {
 void Smelter::update() {
 	debugText();
 
-	materialsAvailable = (treeCount >= minTreesNeeded);
-
-	if (!isBuilt) return;
+	if (!isBuilt) 
+		return;
 
 	if (isActive) {
 		produceTimer.updateTimer();
 		if (produceTimer.hasTimerEnded()) {
-			resourceTracker->treeCount--;
-			ironCount++;
+			ironBarCount++;
+			resourceTracker->ironBarCount++;
 			isActive = false;
 		}
 	}
-	else if (treeCount >= minTreesNeeded) {
+	else if (ironOreCount >= 2 && coalCount >= 3) {
 		isActive = true;
-		treeCount -= costPerIron;
+		ironOreCount -= 2;
+		coalCount -= 3;
 		produceTimer.setNewTimer(6);
 	}
 }

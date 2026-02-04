@@ -85,7 +85,7 @@ void Map::renderMap(int _screenWidth, int _screenHeight, int _tileSize) {
             for (auto& entity : tile.occupyingEntities) {
                 DrawRectangle(tile.position.x + entity.tileOffset.x,
                     tile.position.y + entity.tileOffset.y,
-                    _tileSize / 8, _tileSize / 8, { entity.entityColor });
+                    _tileSize / 4, _tileSize / 4, { entity.entityColor });
             }
         }
     }
