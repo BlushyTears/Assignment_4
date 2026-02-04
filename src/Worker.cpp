@@ -101,6 +101,7 @@ void CollectWoodAction::execute(Worker& worker) {
 		CoalMile* primaryCoalMile = nullptr;
 		Smelter* secondarySmelter = nullptr;
 
+		// try to find nearest building which needs wood the most (hard to dictate exact needs)
 		for (auto& building : worker.buildings) {
 			if (CoalMile* cm = dynamic_cast<CoalMile*>(building)) {
 				primaryCoalMile = cm;
@@ -133,6 +134,7 @@ void CollectWoodAction::execute(Worker& worker) {
 			worker.goalPos = buildingCenter;
 		}
 
+		// if we found goal (building) then insert wood and move on
 		if (Vector2Distance(worker.pos, buildingCenter) < 2.0f) {
 			worker.isCarryingWood = false;
 			worker.currentPath.clear();
@@ -153,6 +155,7 @@ void CollectWoodAction::execute(Worker& worker) {
 			return;
 		}
 	}
+	// then we try to fell try (always assume we are within range of tree as our "base case")
 	else {
 		if (worker.mapReference->tryToFellTree(worker)) {
 			worker.targetResourceTracker->treeCount++;
@@ -206,7 +209,9 @@ void CollectWoodAction::execute(Worker& worker) {
 
 void CollectIronAction::execute(Worker& worker) {
 	if (worker.isCarryingIron) {
-		if (worker.buildings.empty()) return;
+		if (worker.buildings.empty()) 
+			return;
+		// find our closest smelter if nothing else
 		Smelter* targetSmelter = nullptr;
 		for (auto& building : worker.buildings) {
 			if (Smelter* s = dynamic_cast<Smelter*>(building)) {
@@ -214,7 +219,10 @@ void CollectIronAction::execute(Worker& worker) {
 				break;
 			}
 		}
-		if (!targetSmelter) return;
+		if (!targetSmelter) 
+			return;
+
+		// get center of smelter
 		Vector2 bCenter = { targetSmelter->pos.x + (targetSmelter->tileSize / 2.0f), targetSmelter->pos.y + (targetSmelter->tileSize / 2.0f) };
 		if (worker.goalPos.x != bCenter.x || worker.goalPos.y != bCenter.y) {
 			worker.currentPath.clear();
@@ -234,6 +242,7 @@ void CollectIronAction::execute(Worker& worker) {
 		}
 	}
 	else {
+		// if we are close to iron ore, pick up iron ore and move towards smelter
 		if (worker.goalPos.x != -1 && Vector2Distance(worker.pos, worker.goalPos) < 2.0f) {
 			for (int i = 0; i < (int)worker.mapReference->ironOreIndices.size(); i++) {
 				int tileIdx = worker.mapReference->ironOreIndices[i].first;
