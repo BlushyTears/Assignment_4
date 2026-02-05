@@ -75,14 +75,14 @@ DecisionTreeNode<Worker>* IdleDecision::getBranch(Worker& worker) {
 }
 
 DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount < 45) {
+	if (worker.targetResourceTracker->treeCount < 85) {
 		return this->trueNode;
 	}
 	return this->falseNode;
 }
 
 DecisionTreeNode<Worker>* CollectIronDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->ironOreCount < 30 && worker.targetResourceTracker->treeCount > 60) {
+	if (worker.targetResourceTracker->ironOreCount < 30 && worker.targetResourceTracker->treeCount > 100 && !worker.isCarryingWood) {
 		return this->trueNode;
 	}
 	return this->falseNode;
@@ -111,10 +111,10 @@ void CollectWoodAction::execute(Worker& worker) {
 			}
 		}
 
-		if (primaryCoalMile && primaryCoalMile->treeCount < 15) {
+		if (primaryCoalMile && primaryCoalMile->treeCount < 25) {
 			targetBuilding = primaryCoalMile;
 		}
-		else if (secondarySmelter && secondarySmelter->treeCount < 15) {
+		else if (secondarySmelter && secondarySmelter->treeCount > 10) {
 			targetBuilding = secondarySmelter;
 		}
 		else {
@@ -135,7 +135,7 @@ void CollectWoodAction::execute(Worker& worker) {
 		}
 
 		// if we found goal (building) then insert wood and move on
-		if (Vector2Distance(worker.pos, buildingCenter) < 2.0f) {
+		if (Vector2Distance(worker.pos, buildingCenter) < 5.0f) {
 			worker.isCarryingWood = false;
 			worker.currentPath.clear();
 			worker.connectionIdx = 0;
@@ -208,6 +208,7 @@ void CollectWoodAction::execute(Worker& worker) {
 }
 
 void CollectIronAction::execute(Worker& worker) {
+
 	if (worker.isCarryingIron) {
 		if (worker.buildings.empty()) 
 			return;
@@ -228,7 +229,7 @@ void CollectIronAction::execute(Worker& worker) {
 			worker.currentPath.clear();
 			worker.goalPos = bCenter;
 		}
-		if (Vector2Distance(worker.pos, bCenter) < 2.0f) {
+		if (Vector2Distance(worker.pos, bCenter) < 6.0f) {
 			worker.isCarryingIron = false;
 			worker.currentPath.clear();
 			worker.connectionIdx = 0;
@@ -244,27 +245,38 @@ void CollectIronAction::execute(Worker& worker) {
 	else {
 		// if we are close to iron ore, pick up iron ore and move towards smelter
 		if (worker.goalPos.x != -1 && Vector2Distance(worker.pos, worker.goalPos) < 2.0f) {
+			bool foundIron = false;
+
 			for (int i = 0; i < (int)worker.mapReference->ironOreIndices.size(); i++) {
 				int tileIdx = worker.mapReference->ironOreIndices[i].first;
 				if (worker.mapReference->renderedTiles[tileIdx].position.x == worker.goalPos.x &&
 					worker.mapReference->renderedTiles[tileIdx].position.y == worker.goalPos.y) {
 
-					auto& entities = worker.mapReference->renderedTiles[tileIdx].occupyingEntities;
-					for (int j = 0; j < (int)entities.size(); j++) {
-						if (entities[j].entityType == eIronOre) {
-							entities.erase(entities.begin() + j);
+					auto& ironEntities = worker.mapReference->renderedTiles[tileIdx].occupyingEntities;
+					for (int j = 0; j < (int)ironEntities.size(); j++) {
+						if (ironEntities[j].entityType == eIronOre) {
+							ironEntities.erase(ironEntities.begin() + j);
+							foundIron = true;
 							break;
 						}
 					}
 					break;
 				}
 			}
-			worker.isCarryingIron = true;
-			worker.targetResourceTracker->ironOreCount++;
-			worker.currentPath.clear();
-			worker.connectionIdx = 0;
-			worker.goalPos = { -1, -1 };
-			return;
+
+			if (foundIron) {
+				worker.isCarryingIron = true;
+				worker.targetResourceTracker->ironOreCount++;
+				worker.currentPath.clear();
+				worker.connectionIdx = 0;
+				worker.goalPos = { -1, -1 };
+				return;
+			}
+			else {
+				worker.goalPos = { -1, -1 };
+				worker.currentPath.clear();
+				worker.connectionIdx = 0;
+			}
 		}
 		if (worker.goalPos.x == -1) {
 			for (int i = 0; i < (int)worker.mapReference->ironOreIndices.size(); i++) {

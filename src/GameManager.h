@@ -112,6 +112,6 @@ struct Game {
 		int fps = GetFPS();
 		string fpsString = "FPS: " + to_string(fps);
 		const char* fpsChar = fpsString.c_str();
-		DrawText(fpsChar, 120, 120, 24, RED);
+		DrawText(fpsChar, 20, 1180, 12, RED);
 	}
 };

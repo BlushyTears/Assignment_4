@@ -111,9 +111,6 @@ struct Map {
 	// find closest scouted tree relative to unit and chop that down
 	bool tryToFellTree(Worker& unit);
 
-	//int getNearestOreIdx(UnitBase& unit) {
-	//}
-	// Todo: singular tree only
 	void removeTreeByIndex(int _treeTileTargetIdx, int _treeTargetIdx);
 
 	Map(stringstream& ss, int _screenWidth, int _tileSize) {
@@ -179,7 +176,7 @@ struct Map {
 				int entityCount = 1; // This should be read externally
 				Entity entity(entityCount, eIronOre, {0, 0}, Color{ 10, 10, 10, 255 });
 				renderedTiles[randomTileIdx].occupyingEntities.push_back(entity);
-				ironOreIndices.push_back({ randomTileIdx, true });
+				// ironOreIndices.push_back({ randomTileIdx, true });
 			}
 		}
 	}

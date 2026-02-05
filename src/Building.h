@@ -112,10 +112,10 @@ struct Smelter : Building {
 		}
 		else {
 			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
-			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKBROWN);
-		}
-		if (isActive) {
-			DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, ORANGE);
+			DrawRectangle((int)this->pos.x + tileSize / 2, (int)this->pos.y + tileSize / 2, tileSize / 4, tileSize / 4, DARKBROWN);
+			if (isActive) {
+				DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, ORANGE);
+			}
 		}
 	}
 
@@ -181,10 +181,10 @@ struct ArmSmith : Building {
 		}
 		else {
 			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
-			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
-		}
-		if (isActive) {
-			DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, DARKPURPLE);
+			DrawRectangle((int)this->pos.x + tileSize / 2, (int)this->pos.y + tileSize / 2, tileSize / 4, tileSize / 4, DARKGRAY);
+			if (isActive) {
+				DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, DARKPURPLE);
+			}
 		}
 	}
 
@@ -242,12 +242,12 @@ struct TrainingCamp : Building {
 
 	void draw() override {
 		if (!isBuilt) {
-			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, RED);
+			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		else {
 			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, {255, 100, 200});
-			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGREEN);
-			DrawCircle((int)this->pos.x + tileSize / 2, (int)this->pos.y + tileSize / 2, tileSize / 4, DARKGREEN);
+			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
+			DrawCircle((int)this->pos.x + tileSize / 2, (int)this->pos.y + tileSize / 2, tileSize / 4, GREEN);
 		}
 	}
 

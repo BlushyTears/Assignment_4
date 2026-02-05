@@ -35,7 +35,7 @@ void UnitBase::testTile() {
 			int nx = tileX + dx;
 			int ny = tileY + dy;
 
-			// then check if they are actually neighbooring tiles using this compounded expression
+			// then check if they are actually neighbooring tiles here
 			if (nx >= 0 && nx < 100 && ny >= 0 && ny < 100) {
 				Tile& tile = mapReference->renderedTiles[ny * 100 + nx];
 
@@ -44,6 +44,13 @@ void UnitBase::testTile() {
 
 					if (tile.tileType == Trees)
 						mapReference->scoutedTreeTileIndices.push_back(ny * 100 + nx);
+
+					// ugly, implicit assumption that iron ores exist if it's not a tree tile
+					if (tile.tileType == Grass || tile.tileType == Swamp) {
+						if (mapReference->renderedTiles[ny * 100 + nx].occupyingEntities.size() > 0) {
+							mapReference->ironOreIndices.push_back({ ny * 100 + nx, true });
+						}
+					}
 
 					if (tile.tileType == Grass || tile.tileType == Swamp || tile.tileType == Trees) {
 						mapReference->scoutedTiles->walkablePaths.push_back(tile.position);
