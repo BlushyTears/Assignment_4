@@ -12,7 +12,7 @@
 #include <string>
 #include <queue>
 #include <chrono>
-
+#include <unordered_map>
 #include "MapManager.h"
 
 struct Node {
@@ -110,6 +110,7 @@ struct ChartedMap {
     std::vector<Vector2> walkablePaths;
     std::vector<std::vector<int>> walkablePathsNeighboors;
     std::vector<NodeRecord> openList;
+    std::unordered_map<int, int> positionToIndex;
 
     int tileSize = 10;
     float xAccumulator;
@@ -258,45 +259,41 @@ struct ChartedMap {
     // as we unlock new tiles we probably wanna put them in the list
     // only needs to loop through: walkablePaths.size() - 1;
     void computeNewNeighboors(int i) {
-        // Resize to match walkablePaths size if needed
         if (walkablePathsNeighboors.size() < walkablePaths.size()) {
             walkablePathsNeighboors.resize(walkablePaths.size());
         }
 
-        for (int j = 0; j < walkablePaths.size(); j++) {
-            if (i == j) continue;
+        int gridX = (int)(walkablePaths[i].x / tileSize);
+        int gridY = (int)(walkablePaths[i].y / tileSize);
+        int key = gridX * 10000 + gridY;
+        positionToIndex[key] = i;
 
-            int dx = walkablePaths[j].x - walkablePaths[i].x;
-            int dy = walkablePaths[j].y - walkablePaths[i].y;
+        int offsets[8][2] = {
+            {-1, 0}, {1, 0}, {0, -1}, {0, 1},
+            {-1, -1}, {-1, 1}, {1, -1}, {1, 1}
+        };
 
-            bool isHorizontal = (abs(dx) == tileSize && dy == 0);
-            bool isVertical = (abs(dy) == tileSize && dx == 0);
-            bool isDiagonal = (abs(dx) == tileSize && abs(dy) == tileSize);
+        for (auto& offset : offsets) {
+            int nx = gridX + offset[0];
+            int ny = gridY + offset[1];
+            int neighborKey = nx * 10000 + ny;
 
-            if (isHorizontal || isVertical) {
-                walkablePathsNeighboors[i].push_back(j);
-                walkablePathsNeighboors[j].push_back(i);
-                continue;
-            }
+            auto it = positionToIndex.find(neighborKey);
+            if (it != positionToIndex.end()) {
+                int j = it->second;
 
-            if (isDiagonal) {
-                int bx = walkablePaths[i].x + dx;
-                int by = walkablePaths[i].y;
+                bool isDiagonal = (abs(offset[0]) + abs(offset[1]) == 2);
 
-                int cx = walkablePaths[i].x;
-                int cy = walkablePaths[i].y + dy;
+                if (isDiagonal) {
+                    int hKey = (gridX + offset[0]) * 10000 + gridY;
+                    int vKey = gridX * 10000 + (gridY + offset[1]);
 
-                bool horizontalExists = false;
-                bool verticalExists = false;
-
-                for (int k = 0; k < walkablePaths.size(); k++) {
-                    if (walkablePaths[k].x == bx && walkablePaths[k].y == by)
-                        horizontalExists = true;
-                    if (walkablePaths[k].x == cx && walkablePaths[k].y == cy)
-                        verticalExists = true;
+                    if (positionToIndex.count(hKey) && positionToIndex.count(vKey)) {
+                        walkablePathsNeighboors[i].push_back(j);
+                        walkablePathsNeighboors[j].push_back(i);
+                    }
                 }
-
-                if (horizontalExists && verticalExists) {
+                else {
                     walkablePathsNeighboors[i].push_back(j);
                     walkablePathsNeighboors[j].push_back(i);
                 }

@@ -99,22 +99,52 @@ struct CollectIronDecision : Decision<Worker> {
 	DecisionTreeNode<Worker>* getBranch(Worker& worker) override;
 };
 
+// Distribute resources between buildings
+struct DistributinAction : Action<Worker> {
+	void execute(Worker& worker) override;
+};
+
+struct DistributingState : State<Worker> {
+	DistributinAction distributing;
+	std::vector<Transition<Worker>*> transitions;
+
+	std::vector<Action<Worker>*> getActions() override { return { &distributing }; };
+	std::vector<Transition<Worker>*> getTransitions() override { return transitions; };
+};
+
+struct TargetDistributingState : TargetState<Worker> {
+	DistributingState* distributingState;
+
+	TargetDistributingState(DistributingState* s) : distributingState(s) {}
+
+	std::vector<Action<Worker>*> getActions() override { return {}; }
+	State<Worker>* getTargetState() override { return distributingState; }
+};
+
+struct DistributingDecision : Decision<Worker> {
+	DecisionTreeNode<Worker>* getBranch(Worker& worker) override;
+};
+
 struct Worker : UnitBase {
 	IdleState* idelingState;
 	CollectWoodState* collectingWoodState;
 	CollectIronState* collectingIronState;
+	DistributingState* distributingState;
 
 	TargetIdleState* targetIdeling;
 	TargetCollectWoodState* targetWoodcutting;
 	TargetCollectIronState* targetIronCollecting;
+	TargetDistributingState* targetDistribution;
 
 	IdleDecision* idleCheck;
 	CollectWoodDecision* collectWoodCheck;
 	CollectIronDecision* collectIronCheck;
+	DistributingDecision* distributeCheck;
 
 	DecisionTreeTransition<Worker>* toIdle;
 	DecisionTreeTransition<Worker>* toWoodcutting;
 	DecisionTreeTransition<Worker>* toIronCollecting;
+	DecisionTreeTransition<Worker>* toDistributing;
 
 	StateMachine<Worker>* sm;
 	std::vector<Action<Worker>*> plans;

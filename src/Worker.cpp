@@ -11,18 +11,22 @@ Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::
 	idelingState = new IdleState();
 	collectingWoodState = new CollectWoodState();
 	collectingIronState = new CollectIronState();
+	distributingState = new DistributingState();
 
 	targetIdeling = new TargetIdleState(idelingState);
 	targetWoodcutting = new TargetCollectWoodState(collectingWoodState);
 	targetIronCollecting = new TargetCollectIronState(collectingIronState);
-	
+	targetDistribution = new TargetDistributingState(distributingState);
+
 	idleCheck = new IdleDecision();
 	collectWoodCheck = new CollectWoodDecision();
 	collectIronCheck = new CollectIronDecision();
+	distributeCheck = new DistributingDecision();
 
 	toIdle = new DecisionTreeTransition<Worker>();
 	toWoodcutting = new DecisionTreeTransition<Worker>();
 	toIronCollecting = new DecisionTreeTransition<Worker>();
+	toDistributing = new DecisionTreeTransition<Worker>();
 
 	idleCheck->trueNode = targetIdeling;
 	idleCheck->falseNode = nullptr;
@@ -30,17 +34,23 @@ Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::
 	collectWoodCheck->falseNode = nullptr;
 	collectIronCheck->trueNode = targetIronCollecting;
 	collectIronCheck->falseNode = nullptr;
+	distributeCheck->trueNode = targetDistribution;
+	distributeCheck->falseNode = nullptr;
 
 	toIdle->decisionTreeRoot = idleCheck;
 	toWoodcutting->decisionTreeRoot = collectWoodCheck;
 	toIronCollecting->decisionTreeRoot = collectIronCheck;
+	toDistributing->decisionTreeRoot = distributeCheck;
 
 	idelingState->transitions.push_back(toWoodcutting);
 	idelingState->transitions.push_back(toIronCollecting);
+	idelingState->transitions.push_back(toDistributing);
 	collectingWoodState->transitions.push_back(toIdle);
 	collectingWoodState->transitions.push_back(toIronCollecting);
+	collectingWoodState->transitions.push_back(toDistributing);
 	collectingIronState->transitions.push_back(toIdle);
 	collectingIronState->transitions.push_back(toWoodcutting);
+	collectingIronState->transitions.push_back(toDistributing);
 
 	sm = new StateMachine<Worker>(collectingWoodState);
 
@@ -67,25 +77,39 @@ Worker::~Worker() {
 	delete collectingIronState;
 }
 
+DecisionTreeNode<Worker>* DistributingDecision::getBranch(Worker& worker) {
+	if (worker.targetResourceTracker->treeCount > 20 && worker.targetResourceTracker->workersDistributing < 3) {
+		worker.targetResourceTracker->workersDistributing++;
+		std::cout << "Unit decided to be a distributer" << std::endl;
+		return this->trueNode;
+	}
+	return this->falseNode;
+}
 DecisionTreeNode<Worker>* IdleDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount > 500 && worker.targetResourceTracker->ironOreCount > 50 && !worker.isCarryingWood) {
+	if (false) {
+		std::cout << "Unit decided to be idle" << std::endl;
 		return this->trueNode;
 	}
 	return this->falseNode;
 }
 
 DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount < 85) {
+	if (worker.targetResourceTracker->treeCount < 40) {
+		std::cout << "Unit decided to start gather Wood" << std::endl;
 		return this->trueNode;
 	}
 	return this->falseNode;
 }
 
 DecisionTreeNode<Worker>* CollectIronDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->ironOreCount < 30 && worker.targetResourceTracker->treeCount > 100 && !worker.isCarryingWood) {
+	if (worker.targetResourceTracker->ironOreCount < 30 && worker.targetResourceTracker->treeCount > 80) {
+		std::cout << "Unit decided to start gather iron"  << std::endl;
 		return this->trueNode;
 	}
 	return this->falseNode;
+}
+
+void DistributinAction::execute(Worker& worker) {
 }
 
 void IdleAction::execute(Worker& worker) {
@@ -93,6 +117,13 @@ void IdleAction::execute(Worker& worker) {
 }
 
 void CollectWoodAction::execute(Worker& worker) {
+
+	string trees = "Global Treecount: " + to_string(worker.targetResourceTracker->treeCount);
+	DrawText(trees.c_str(), 300, 1130, 16, RED);
+
+	string iron = "Global Iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
+	DrawText(iron.c_str(), 300, 1150, 16, RED);
+
 	if (worker.isCarryingWood) {
 		if (worker.buildings.empty())
 			return;
@@ -140,7 +171,7 @@ void CollectWoodAction::execute(Worker& worker) {
 			worker.currentPath.clear();
 			worker.connectionIdx = 0;
 			worker.goalPos = Vector2{ -1, -1 };
-
+			worker.targetResourceTracker->treeCount--;
 			if (CoalMile* cm = dynamic_cast<CoalMile*>(targetBuilding)) {
 				cm->treeCount++;
 			}
@@ -225,11 +256,12 @@ void CollectIronAction::execute(Worker& worker) {
 
 		// get center of smelter
 		Vector2 bCenter = { targetSmelter->pos.x + (targetSmelter->tileSize / 2.0f), targetSmelter->pos.y + (targetSmelter->tileSize / 2.0f) };
+
 		if (worker.goalPos.x != bCenter.x || worker.goalPos.y != bCenter.y) {
 			worker.currentPath.clear();
 			worker.goalPos = bCenter;
 		}
-		if (Vector2Distance(worker.pos, bCenter) < 6.0f) {
+		if (Vector2Distance(worker.pos, bCenter) < 8.0f) {
 			worker.isCarryingIron = false;
 			worker.currentPath.clear();
 			worker.connectionIdx = 0;

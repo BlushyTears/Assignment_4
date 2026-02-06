@@ -54,13 +54,21 @@ UnitToTrain Game::getNextUnitToTrain() {
 		targetResourceCount->scoutCount++;
 		return EnumScout;
 	}
-	else if (targetResourceCount->coalMinerCount < 1) {
-		targetResourceCount->coalMinerCount++;
-		return EnumCoalMiner;
-	}
 	else if (targetResourceCount->builderCount < 1) {
 		targetResourceCount->builderCount++;
 		return EnumBuilder;
+	}
+	else if (targetResourceCount->coalMinerCount < 1 && targetResourceCount->coalMileCount >= 1) {
+		targetResourceCount->coalMinerCount++;
+		return EnumCoalMiner;
+	}
+	else if (targetResourceCount->armSmithCount < 1 && targetResourceCount->armsmithForgeCount >= 1) {
+		targetResourceCount->armSmithCount++;
+		return EnumArmSmith;
+	}
+	else if (targetResourceCount->smelterCount < 1 && targetResourceCount->smelterBuildingCount >= 1) {
+		targetResourceCount->smelterCount++;
+		return EnumSmelter;
 	}
 	return EnumNone;
 }
@@ -97,6 +105,7 @@ void Game::update() {
 	updateTrainingUnits();
 	controlBuildings();
 	gameMap->drawBuildings();
+
 }
 
 void Game::convertUnit(UnitBase* unitPtr, UnitToTrain unitType) {
@@ -117,6 +126,14 @@ void Game::convertUnit(UnitBase* unitPtr, UnitToTrain unitType) {
 			case EnumBuilder:
 				unit = std::make_unique<Builder>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
 				actualResourceCount->builderCount++;
+				break;
+			case EnumSmelter:
+				unit = std::make_unique<SmelterWorker>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
+				actualResourceCount->smelterCount++;
+				break;
+			case EnumArmSmith:
+				unit = std::make_unique<ArmSmithWorker>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
+				actualResourceCount->armSmithCount++;
 				break;
 			case EnumNone:
 				break;

@@ -41,10 +41,13 @@ struct ResourceTracker {
 	int workerCount = 50;
 	int scoutCount = 0;
 	int coalMinerCount = 0;
-	int blackSmithCount = 0;
+	int armSmithCount = 0;
 	int smelterCount = 0;
 	int builderCount = 0;
 	int soldierCount = 0;
+
+	// this is really bad and lazy
+	int workersDistributing = 0;
 };
 
 // Final hybrid-based design for units:

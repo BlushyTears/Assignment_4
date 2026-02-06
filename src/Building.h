@@ -31,8 +31,8 @@ struct Building {
 struct CoalMile : Building {
 	ResourceTracker* resourceTracker = nullptr;
 	int treeCount = 0;
-	int coalCount = 0;
 	int minTreesNeeded = 10;
+	int coalCount = 0;
 	int costPerCoal = 2;
 	bool isActive = false;
 
@@ -79,8 +79,8 @@ struct CoalMile : Building {
 struct Smelter : Building {
 	ResourceTracker* resourceTracker;
 	int treeCount = 0;
-	int ironOreCount = 0;
 	int minTreesNeeded = 10;
+	int ironOreCount = 0;
 	int coalCostPerIronBar = 2;
 	int ironBarCount = 0;
 
@@ -128,15 +128,18 @@ struct Smelter : Building {
 
 		std::string text4 = "Iron bar in smelter: " + std::to_string(ironBarCount);
 		DrawText(text4.c_str(), 220, 1040, 16, PURPLE);
+
+		std::string text1 = "Trees in coal mile: " + std::to_string(treeCount);
+		DrawText(text1.c_str(), 220, 1060, 16, PURPLE);
 	}
 };
 
 struct ArmSmith : Building {
 	ResourceTracker* resourceTracker;
-	int ironArrowCount = 0;
-	int coalCount = 0;
 	int treeCount = 0;
 	int minTreesNeeded = 10;
+	int coalCount = 0;
+	int ironArrowCount = 0;
 	int ironSwordCount = 0;
 	bool isActive = false;
 
@@ -194,14 +197,17 @@ struct ArmSmith : Building {
 
 		std::string text4 = "Iron sword in armsmith: " + std::to_string(ironSwordCount);
 		DrawText(text4.c_str(), 420, 1020, 16, PURPLE);
+
+		std::string text2 = "Trees in coal mile: " + std::to_string(treeCount);
+		DrawText(text2.c_str(), 420, 1040, 16, PURPLE);
 	}
 };
 
 struct TrainingCamp : Building {
 	ResourceTracker* resourceTracker;
 	int treeCount = 0;
-	int coalCount = 0;
 	int minTreesNeeded = 10;
+	int coalCount = 0;
 	bool isActive = false;
 
 	TrainingCamp(Vector2 _pos, ResourceTracker* _rt, int _tileSize) {
@@ -212,7 +218,6 @@ struct TrainingCamp : Building {
 
 	void update() override {
 		debugText();
-
 
 		if (!isBuilt) return;
 
@@ -247,12 +252,15 @@ struct TrainingCamp : Building {
 		else {
 			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, {255, 100, 200});
 			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
-			DrawCircle((int)this->pos.x + tileSize / 2, (int)this->pos.y + tileSize / 2, tileSize / 4, GREEN);
+			DrawCircle((int)this->pos.x + tileSize / 2, (int)this->pos.y + tileSize / 2, tileSize / 4, RED);
 		}
 	}
 
 	void debugText() override {
 		std::string text = "Swords  in armsmith: " + std::to_string(treeCount);
 		DrawText(text.c_str(), 620, 1000, 16, PURPLE);
+
+		std::string text2 = "Trees in coal mile: " + std::to_string(treeCount);
+		DrawText(text2.c_str(), 620, 1020, 16, PURPLE);
 	}
 };

@@ -37,6 +37,7 @@ struct UnitBase {
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
 	int currentGoalTileIdx = 0;
+	int tileCountSinceComputeNeighboors = 0;
 
 	bool isTraining = false;
 	Map* mapReference = nullptr;
@@ -56,6 +57,8 @@ struct UnitBase {
 	int getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck, Vector2& _unitPos);
 	virtual void renderUnit() = 0;
 	virtual void commandUnit() = 0;
+
+	void updatePathfindingCooldown(float deltaTime);
 
 	virtual void calculateNewPath() {
 		isAwaitingNewPath = false;
@@ -94,10 +97,25 @@ struct Scout : UnitBase {
 	void commandUnit();
 };
 
+struct Builder : UnitBase {
+	Builder(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu)
+		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {
+	}
+
+	Building* targetBuilding = nullptr;
+	void commandUnit() override;
+	void renderUnit() {
+		DrawCircle(pos.x, pos.y, size, PINK);
+	};
+	void calculateNewPath() override;
+
+};
+
 struct CoalWorker : UnitBase {
 	CoalWorker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu) 
 		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {}
 
+	Building* targetBuilding = nullptr;
 	void commandUnit() override;
 	void renderUnit() {
 		DrawCircle(pos.x, pos.y, size, DARKGRAY);
@@ -105,14 +123,27 @@ struct CoalWorker : UnitBase {
 	void calculateNewPath() override;
 };
 
-struct Builder : UnitBase {
-	Builder(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu) 
+struct SmelterWorker : UnitBase {
+	SmelterWorker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu)
 		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {}
 
 	Building* targetBuilding = nullptr;
 	void commandUnit() override;
 	void renderUnit() {
-		DrawCircle(pos.x, pos.y, size, PINK);
+		DrawCircle(pos.x, pos.y, size, GRAY);
+	};
+	void calculateNewPath() override;
+};
+
+struct ArmSmithWorker : UnitBase {
+	ArmSmithWorker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu)
+		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {
+	}
+
+	Building* targetBuilding = nullptr;
+	void commandUnit() override;
+	void renderUnit() {
+		DrawCircle(pos.x, pos.y, size, ORANGE);
 	};
 	void calculateNewPath() override;
 };

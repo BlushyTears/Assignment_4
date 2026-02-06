@@ -55,6 +55,7 @@ void UnitBase::testTile() {
 					if (tile.tileType == Grass || tile.tileType == Swamp || tile.tileType == Trees) {
 						mapReference->scoutedTiles->walkablePaths.push_back(tile.position);
 						mapReference->scoutedTiles->graph->addLatestNodeToGraph(mapReference->scoutedTiles->walkablePaths);
+						this->tileCountSinceComputeNeighboors++;
 						mapReference->scoutedTiles->computeNewNeighboors(mapReference->scoutedTiles->walkablePaths.size() - 1);
 					}
 				}
@@ -121,44 +122,6 @@ void Scout::commandUnit() {
 	}
 }
 
-// For now coal builders just behave like scouts
-void CoalWorker::calculateNewPath() {
-	auto ref = mapReference->scoutedTiles;
-
-	int randomNodeIdx = getRandomNumber(0, (ref->walkablePaths.size() - 1));
-	currentTileIdx = getcurrentCorrespondingTile(ref->walkablePaths, this->pos);
-
-	currentPath = ref->AStar(
-		ref->walkablePaths[currentTileIdx],
-		ref->walkablePaths[randomNodeIdx],
-		ref->walkablePathsNeighboors);
-
-	UnitBase::calculateNewPath();
-}
-
-void CoalWorker::commandUnit() {
-	if (currentPath.size() == 0) {
-		AwaitNewPath();
-	}
-	else {
-		// Casually move toward targetPos
-		if (Vector2Distance(pos, targetPos) > 10) {
-			moveUnitTowardsInternalGoal();
-		}
-		// we hit our next goal
-		if (Vector2Distance(pos, targetPos) < 5) {
-			targetPos.x = (float)currentPath[connectionIdx].toNode.x;
-			targetPos.y = (float)currentPath[connectionIdx].toNode.y;
-			connectionIdx++;
-		}
-		// we reached the end of our path, so therefore reset and make new path
-		if (connectionIdx >= currentPath.size() - 1) {
-			currentPath.clear();
-			connectionIdx = 0;
-		}
-	}
-}
-
 void Builder::calculateNewPath() {
 	auto ref = mapReference->scoutedTiles;
 
@@ -185,7 +148,6 @@ void Builder::commandUnit() {
 			}
 		}
 	}
-
 	if (targetBuilding != nullptr) {
 		if (currentPath.size() == 0) {
 			AwaitNewPath();
@@ -211,6 +173,20 @@ void Builder::commandUnit() {
 					}
 				}
 
+				Smelter* smelter = dynamic_cast<Smelter*>(targetBuilding);
+				if (smelter != nullptr && !smelter->isBuilt) {
+					 if (smelter->treeCount < smelter->minTreesNeeded) {
+					     return;
+					 }
+				}
+
+				ArmSmith* armSmith = dynamic_cast<ArmSmith*>(targetBuilding);
+				if (armSmith != nullptr && !armSmith->isBuilt) {
+					 if (armSmith->treeCount < armSmith->minTreesNeeded) {
+					     return;
+					 }
+				}
+
 				if (!this->targetBuilding->isBuilt && !this->targetBuilding->isBuilding) {
 					this->targetBuilding->isBuilding = true;
 					this->targetBuilding->buildTimer.setNewTimer(5);
@@ -232,6 +208,147 @@ void Builder::commandUnit() {
 					}
 				}
 			}
+		}
+	}
+}
+
+void CoalWorker::calculateNewPath() {
+	auto ref = mapReference->scoutedTiles;
+
+	int targetBuildingIdx = getcurrentCorrespondingTile(ref->walkablePaths, targetBuilding->pos);
+	currentTileIdx = getcurrentCorrespondingTile(ref->walkablePaths, this->pos);
+
+	currentPath = ref->AStar(
+		ref->walkablePaths[currentTileIdx],
+		ref->walkablePaths[targetBuildingIdx],
+		ref->walkablePathsNeighboors);
+
+	UnitBase::calculateNewPath();
+}
+
+void CoalWorker::commandUnit() {
+	if (targetBuilding == nullptr) {
+		for (auto& building : buildings) {
+			CoalMile* cm = dynamic_cast<CoalMile*>(building);
+
+			if (cm)
+				targetBuilding = cm;
+			break;
+		}
+		return;
+	}
+	if (currentPath.size() == 0) {
+		AwaitNewPath();
+	}
+	else {
+		// Casually move toward targetPos
+		if (Vector2Distance(pos, targetPos) > 10) {
+			moveUnitTowardsInternalGoal();
+		}
+		// we hit our next goal
+		if (Vector2Distance(pos, targetPos) < 5) {
+			targetPos.x = (float)currentPath[connectionIdx].toNode.x;
+			targetPos.y = (float)currentPath[connectionIdx].toNode.y;
+			connectionIdx++;
+		}
+		// we reached the end of our path, so therefore reset and make new path
+		if (connectionIdx >= currentPath.size() - 1) {
+			currentPath.clear();
+			connectionIdx = 0;
+		}
+	}
+}
+
+void SmelterWorker::calculateNewPath() {
+	auto ref = mapReference->scoutedTiles;
+
+	int targetBuildingIdx = getcurrentCorrespondingTile(ref->walkablePaths, targetBuilding->pos);
+	currentTileIdx = getcurrentCorrespondingTile(ref->walkablePaths, this->pos);
+
+	currentPath = ref->AStar(
+		ref->walkablePaths[currentTileIdx],
+		ref->walkablePaths[targetBuildingIdx],
+		ref->walkablePathsNeighboors);
+
+	UnitBase::calculateNewPath();
+}
+
+void SmelterWorker::commandUnit() {
+	if (targetBuilding == nullptr) {
+		for (auto& building : buildings) {
+			Smelter* cm = dynamic_cast<Smelter*>(building);
+
+			if (cm)
+				targetBuilding = cm;
+			break;
+		}
+		return;
+	}
+	if (currentPath.size() == 0) {
+		AwaitNewPath();
+	}
+	else {
+		// Casually move toward targetPos
+		if (Vector2Distance(pos, targetPos) > 10) {
+			moveUnitTowardsInternalGoal();
+		}
+		// we hit our next goal
+		if (Vector2Distance(pos, targetPos) < 5) {
+			targetPos.x = (float)currentPath[connectionIdx].toNode.x;
+			targetPos.y = (float)currentPath[connectionIdx].toNode.y;
+			connectionIdx++;
+		}
+		// we reached the end of our path, so therefore reset and make new path
+		if (connectionIdx >= currentPath.size() - 1) {
+			currentPath.clear();
+			connectionIdx = 0;
+		}
+	}
+}
+
+void ArmSmithWorker::calculateNewPath() {
+	auto ref = mapReference->scoutedTiles;
+
+	int targetBuildingIdx = getcurrentCorrespondingTile(ref->walkablePaths, targetBuilding->pos);
+	currentTileIdx = getcurrentCorrespondingTile(ref->walkablePaths, this->pos);
+
+	currentPath = ref->AStar(
+		ref->walkablePaths[currentTileIdx],
+		ref->walkablePaths[targetBuildingIdx],
+		ref->walkablePathsNeighboors);
+
+	UnitBase::calculateNewPath();
+}
+
+void ArmSmithWorker::commandUnit() {
+	if (targetBuilding == nullptr) {
+		for (auto& building : buildings) {
+			ArmSmith* s = dynamic_cast<ArmSmith*>(building);
+
+			if (s)
+				targetBuilding = s;
+			break;
+		}
+		return;
+	}
+	if (currentPath.size() == 0) {
+		AwaitNewPath();
+	}
+	else {
+		// Casually move toward targetPos
+		if (Vector2Distance(pos, targetPos) > 10) {
+			moveUnitTowardsInternalGoal();
+		}
+		// we hit our next goal
+		if (Vector2Distance(pos, targetPos) < 5) {
+			targetPos.x = (float)currentPath[connectionIdx].toNode.x;
+			targetPos.y = (float)currentPath[connectionIdx].toNode.y;
+			connectionIdx++;
+		}
+		// we reached the end of our path, so therefore reset and make new path
+		if (connectionIdx >= currentPath.size() - 1) {
+			currentPath.clear();
+			connectionIdx = 0;
 		}
 	}
 }
