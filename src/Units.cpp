@@ -191,6 +191,7 @@ void Builder::commandUnit() {
 					this->targetBuilding->isBuilding = true;
 					this->targetBuilding->buildTimer.setNewTimer(5);
 					this->targetBuilding->startBuildProcess();
+					this->targetResourceTracker->treeCount -= 10;
 				}
 
 				if (this->targetBuilding->isBuilding) {

@@ -78,7 +78,7 @@ Worker::~Worker() {
 }
 
 DecisionTreeNode<Worker>* DistributingDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount > 20 && worker.targetResourceTracker->workersDistributing < 3) {
+	if (worker.targetResourceTracker->treeCount > 25 && worker.targetResourceTracker->workersDistributing < 3) {
 		worker.targetResourceTracker->workersDistributing++;
 		std::cout << "Unit decided to be a distributer" << std::endl;
 		return this->trueNode;
@@ -94,7 +94,7 @@ DecisionTreeNode<Worker>* IdleDecision::getBranch(Worker& worker) {
 }
 
 DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount < 40) {
+	if (worker.targetResourceTracker->treeCount < 50) {
 		std::cout << "Unit decided to start gather Wood" << std::endl;
 		return this->trueNode;
 	}
@@ -102,7 +102,7 @@ DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
 }
 
 DecisionTreeNode<Worker>* CollectIronDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->ironOreCount < 30 && worker.targetResourceTracker->treeCount > 80) {
+	if (worker.targetResourceTracker->ironOreCount < 30 && worker.targetResourceTracker->treeCount > 120) {
 		std::cout << "Unit decided to start gather iron"  << std::endl;
 		return this->trueNode;
 	}
@@ -110,49 +110,22 @@ DecisionTreeNode<Worker>* CollectIronDecision::getBranch(Worker& worker) {
 }
 
 void DistributinAction::execute(Worker& worker) {
-}
-
-void IdleAction::execute(Worker& worker) {
-	std::cout << "Unit is idle tree count: " << worker.targetResourceTracker->treeCount << std::endl;
-}
-
-void CollectWoodAction::execute(Worker& worker) {
-
-	string trees = "Global Treecount: " + to_string(worker.targetResourceTracker->treeCount);
-	DrawText(trees.c_str(), 300, 1130, 16, RED);
-
-	string iron = "Global Iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
-	DrawText(iron.c_str(), 300, 1150, 16, RED);
-
 	if (worker.isCarryingWood) {
 		if (worker.buildings.empty())
 			return;
 
 		Building* targetBuilding = nullptr;
-		CoalMile* primaryCoalMile = nullptr;
-		Smelter* secondarySmelter = nullptr;
 
-		// try to find nearest building which needs wood the most (hard to dictate exact needs)
 		for (auto& building : worker.buildings) {
-			if (CoalMile* cm = dynamic_cast<CoalMile*>(building)) {
-				primaryCoalMile = cm;
-			}
-			if (Smelter* s = dynamic_cast<Smelter*>(building)) {
-				secondarySmelter = s;
+			if (building != nullptr) {
+				if (!dynamic_cast<CoalMile*>(building) && building->treeCount < 10 && !building->isBuilt) {
+					targetBuilding = building;
+					break;
+				}
 			}
 		}
 
-		if (primaryCoalMile && primaryCoalMile->treeCount < 25) {
-			targetBuilding = primaryCoalMile;
-		}
-		else if (secondarySmelter && secondarySmelter->treeCount > 10) {
-			targetBuilding = secondarySmelter;
-		}
-		else {
-			targetBuilding = primaryCoalMile;
-		}
-
-		if (!targetBuilding) 
+		if (!targetBuilding)
 			return;
 
 		Vector2 buildingCenter = {
@@ -165,19 +138,12 @@ void CollectWoodAction::execute(Worker& worker) {
 			worker.goalPos = buildingCenter;
 		}
 
-		// if we found goal (building) then insert wood and move on
 		if (Vector2Distance(worker.pos, buildingCenter) < 5.0f) {
 			worker.isCarryingWood = false;
 			worker.currentPath.clear();
 			worker.connectionIdx = 0;
 			worker.goalPos = Vector2{ -1, -1 };
-			worker.targetResourceTracker->treeCount--;
-			if (CoalMile* cm = dynamic_cast<CoalMile*>(targetBuilding)) {
-				cm->treeCount++;
-			}
-			else if (Smelter* s = dynamic_cast<Smelter*>(targetBuilding)) {
-				s->treeCount++;
-			}
+			targetBuilding->treeCount++;
 			return;
 		}
 
@@ -186,7 +152,111 @@ void CollectWoodAction::execute(Worker& worker) {
 			return;
 		}
 	}
-	// then we try to fell try (always assume we are within range of tree as our "base case")
+	else {
+		CoalMile* source = nullptr;
+		for (auto& building : worker.buildings) {
+			if (CoalMile* cm = dynamic_cast<CoalMile*>(building)) {
+				if (cm->treeCount > 0) {
+					source = cm;
+					break;
+				}
+			}
+		}
+
+		if (!source)
+			return;
+
+		Vector2 sourceCenter = {
+			source->pos.x + (source->tileSize / 2.0f),
+			source->pos.y + (source->tileSize / 2.0f)
+		};
+
+		if (worker.goalPos.x != sourceCenter.x || worker.goalPos.y != sourceCenter.y) {
+			worker.currentPath.clear();
+			worker.goalPos = sourceCenter;
+		}
+
+		if (Vector2Distance(worker.pos, sourceCenter) < 5.0f) {
+			worker.isCarryingWood = true;
+			worker.currentPath.clear();
+			worker.connectionIdx = 0;
+			worker.goalPos = Vector2{ -1, -1 };
+			source->treeCount--;
+			return;
+		}
+
+		if (worker.currentPath.empty()) {
+			worker.calculateNewPath();
+			return;
+		}
+	}
+
+	if (Vector2Distance(worker.pos, worker.targetPos) > 1.0f) {
+		worker.moveUnitTowardsInternalGoal();
+	}
+	else {
+		if (worker.connectionIdx < (int)worker.currentPath.size()) {
+			worker.targetPos.x = (float)worker.currentPath[worker.connectionIdx].toNode.x;
+			worker.targetPos.y = (float)worker.currentPath[worker.connectionIdx].toNode.y;
+			worker.connectionIdx++;
+		}
+		else if (worker.goalPos.x != -1) {
+			worker.targetPos = worker.goalPos;
+		}
+	}
+}
+
+void IdleAction::execute(Worker& worker) {
+	std::cout << "Unit is idle tree count: " << worker.targetResourceTracker->treeCount << std::endl;
+}
+
+void CollectWoodAction::execute(Worker& worker) {
+	string trees = "Global Treecount: " + to_string(worker.targetResourceTracker->treeCount);
+	DrawText(trees.c_str(), 300, 1130, 16, RED);
+
+	string iron = "Global Iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
+	DrawText(iron.c_str(), 300, 1150, 16, RED);
+
+	if (worker.isCarryingWood) {
+		if (worker.buildings.empty())
+			return;
+
+		CoalMile* targetBuilding = nullptr;
+
+		for (auto& building : worker.buildings) {
+			if (CoalMile* cm = dynamic_cast<CoalMile*>(building)) {
+				targetBuilding = cm;
+				break;
+			}
+		}
+
+		if (!targetBuilding)
+			return;
+
+		Vector2 buildingCenter = {
+			targetBuilding->pos.x + (targetBuilding->tileSize / 2.0f),
+			targetBuilding->pos.y + (targetBuilding->tileSize / 2.0f)
+		};
+
+		if (worker.goalPos.x != buildingCenter.x || worker.goalPos.y != buildingCenter.y) {
+			worker.currentPath.clear();
+			worker.goalPos = buildingCenter;
+		}
+
+		if (Vector2Distance(worker.pos, buildingCenter) < 5.0f) {
+			worker.isCarryingWood = false;
+			worker.currentPath.clear();
+			worker.connectionIdx = 0;
+			worker.goalPos = Vector2{ -1, -1 };
+			targetBuilding->treeCount++;
+			return;
+		}
+
+		if (worker.currentPath.empty()) {
+			worker.calculateNewPath();
+			return;
+		}
+	}
 	else {
 		if (worker.mapReference->tryToFellTree(worker)) {
 			worker.targetResourceTracker->treeCount++;
@@ -239,7 +309,6 @@ void CollectWoodAction::execute(Worker& worker) {
 }
 
 void CollectIronAction::execute(Worker& worker) {
-
 	if (worker.isCarryingIron) {
 		if (worker.buildings.empty()) 
 			return;

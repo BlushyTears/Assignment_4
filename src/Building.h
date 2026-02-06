@@ -18,6 +18,8 @@ struct Building {
 	Vector2 pos;
 	Timer produceTimer;
 	Timer buildTimer;
+	int treeCount = 0;
+	int minTreesNeeded = 10;
 	bool isBuilt = false;
 	bool isBuilding = false;
 	int tileSize = 10;
@@ -30,8 +32,6 @@ struct Building {
 
 struct CoalMile : Building {
 	ResourceTracker* resourceTracker = nullptr;
-	int treeCount = 0;
-	int minTreesNeeded = 10;
 	int coalCount = 0;
 	int costPerCoal = 2;
 	bool isActive = false;
@@ -77,9 +77,7 @@ struct CoalMile : Building {
 };
 
 struct Smelter : Building {
-	ResourceTracker* resourceTracker;
-	int treeCount = 0;
-	int minTreesNeeded = 10;
+	ResourceTracker* resourceTracker = nullptr;
 	int ironOreCount = 0;
 	int coalCostPerIronBar = 2;
 	int ironBarCount = 0;
@@ -99,6 +97,7 @@ struct Smelter : Building {
 	void startBuildProcess() override {
 		if (treeCount >= minTreesNeeded) {
 			treeCount -= minTreesNeeded;
+			//resourceTracker->treeCount -= minTreesNeeded;
 		}
 	}
 
@@ -108,14 +107,14 @@ struct Smelter : Building {
 
 	void draw() override {
 		if (!isBuilt) {
-			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKBROWN);
+			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		else {
-			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
-			DrawRectangle((int)this->pos.x + tileSize / 2, (int)this->pos.y + tileSize / 2, tileSize / 4, tileSize / 4, DARKBROWN);
-			if (isActive) {
-				DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, ORANGE);
-			}
+			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
+			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
+		}
+		if (isActive) {
+			DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, RED);
 		}
 	}
 
@@ -135,9 +134,7 @@ struct Smelter : Building {
 };
 
 struct ArmSmith : Building {
-	ResourceTracker* resourceTracker;
-	int treeCount = 0;
-	int minTreesNeeded = 10;
+	ResourceTracker* resourceTracker = nullptr;
 	int coalCount = 0;
 	int ironArrowCount = 0;
 	int ironSwordCount = 0;
@@ -183,11 +180,11 @@ struct ArmSmith : Building {
 			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		else {
-			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
-			DrawRectangle((int)this->pos.x + tileSize / 2, (int)this->pos.y + tileSize / 2, tileSize / 4, tileSize / 4, DARKGRAY);
-			if (isActive) {
-				DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, DARKPURPLE);
-			}
+			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
+			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
+		}
+		if (isActive) {
+			DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, RED);
 		}
 	}
 
@@ -204,9 +201,7 @@ struct ArmSmith : Building {
 };
 
 struct TrainingCamp : Building {
-	ResourceTracker* resourceTracker;
-	int treeCount = 0;
-	int minTreesNeeded = 10;
+	ResourceTracker* resourceTracker = nullptr;
 	int coalCount = 0;
 	bool isActive = false;
 
@@ -250,9 +245,11 @@ struct TrainingCamp : Building {
 			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		else {
-			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, {255, 100, 200});
-			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
-			DrawCircle((int)this->pos.x + tileSize / 2, (int)this->pos.y + tileSize / 2, tileSize / 4, RED);
+			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLUE);
+			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLUE);
+		}
+		if (isActive) {
+			DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, BLACK);
 		}
 	}
 

@@ -157,6 +157,8 @@ struct Worker : UnitBase {
 	bool isCarryingWood = false;
 	bool isCarryingIron = false;
 
+	bool isCarryingCoal = false;
+
 	//MapIndex treeToChop;
 	//bool hasWoodLogs = false;
 
