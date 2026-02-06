@@ -81,6 +81,7 @@ struct Smelter : Building {
 	int ironOreCount = 0;
 	int coalCostPerIronBar = 2;
 	int ironBarCount = 0;
+	int ironArrowCount = 0;
 
 	int coalCount = 0;
 
@@ -122,14 +123,17 @@ struct Smelter : Building {
 		std::string text2 = "Coal in smelter: " + std::to_string(coalCount);
 		DrawText(text2.c_str(), 220, 1000, 16, PURPLE);
 
-		std::string text3 = "Iron ore in smelter: " + std::to_string(ironOreCount);
+		std::string text3 = "Iron ores in smelter: " + std::to_string(ironOreCount);
 		DrawText(text3.c_str(), 220, 1020, 16, PURPLE);
 
-		std::string text4 = "Iron bar in smelter: " + std::to_string(ironBarCount);
+		std::string text4 = "Iron bars in smelter: " + std::to_string(ironBarCount);
 		DrawText(text4.c_str(), 220, 1040, 16, PURPLE);
 
-		std::string text1 = "Trees in coal mile: " + std::to_string(treeCount);
-		DrawText(text1.c_str(), 220, 1060, 16, PURPLE);
+		std::string text5 = "Iron arrows in smelter: " + std::to_string(ironArrowCount);
+		DrawText(text5.c_str(), 220, 1060, 16, PURPLE);
+
+		std::string text1 = "Trees in smelter: " + std::to_string(treeCount);
+		DrawText(text1.c_str(), 220, 1080, 16, PURPLE);
 	}
 };
 
@@ -195,15 +199,15 @@ struct ArmSmith : Building {
 		std::string text4 = "Iron sword in armsmith: " + std::to_string(ironSwordCount);
 		DrawText(text4.c_str(), 420, 1020, 16, PURPLE);
 
-		std::string text2 = "Trees in coal mile: " + std::to_string(treeCount);
+		std::string text2 = "Trees in arm smith: " + std::to_string(treeCount);
 		DrawText(text2.c_str(), 420, 1040, 16, PURPLE);
 	}
 };
 
 struct TrainingCamp : Building {
 	ResourceTracker* resourceTracker = nullptr;
-	int coalCount = 0;
 	bool isActive = false;
+	int swordCount = 0;
 
 	TrainingCamp(Vector2 _pos, ResourceTracker* _rt, int _tileSize) {
 		pos = _pos;
@@ -219,7 +223,6 @@ struct TrainingCamp : Building {
 		if (isActive) {
 			produceTimer.updateTimer();
 			if (produceTimer.hasTimerEnded()) {
-				coalCount++;
 				isActive = false;
 			}
 		}
@@ -254,10 +257,10 @@ struct TrainingCamp : Building {
 	}
 
 	void debugText() override {
-		std::string text = "Swords  in armsmith: " + std::to_string(treeCount);
+		std::string text = "Swords in training camp: " + std::to_string(swordCount);
 		DrawText(text.c_str(), 620, 1000, 16, PURPLE);
 
-		std::string text2 = "Trees in coal mile: " + std::to_string(treeCount);
+		std::string text2 = "Trees in training camp: " + std::to_string(treeCount);
 		DrawText(text2.c_str(), 620, 1020, 16, PURPLE);
 	}
 };

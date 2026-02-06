@@ -110,16 +110,26 @@ DecisionTreeNode<Worker>* CollectIronDecision::getBranch(Worker& worker) {
 }
 
 void DistributinAction::execute(Worker& worker) {
-	if (worker.isCarryingWood) {
+	if (worker.isCarryingWood || worker.isCarryingCoal) {
 		if (worker.buildings.empty())
 			return;
 
 		Building* targetBuilding = nullptr;
 
-		for (auto& building : worker.buildings) {
-			if (building != nullptr) {
-				if (!dynamic_cast<CoalMile*>(building) && building->treeCount < 10 && !building->isBuilt) {
-					targetBuilding = building;
+		if (worker.isCarryingWood) {
+			for (auto& building : worker.buildings) {
+				if (building != nullptr) {
+					if (!dynamic_cast<CoalMile*>(building) && building->treeCount < 10 && !building->isBuilt) {
+						targetBuilding = building;
+						break;
+					}
+				}
+			}
+		}
+		else if (worker.isCarryingCoal) {
+			for (auto& building : worker.buildings) {
+				if (Smelter* s = dynamic_cast<Smelter*>(building)) {
+					targetBuilding = s;
 					break;
 				}
 			}
@@ -139,11 +149,19 @@ void DistributinAction::execute(Worker& worker) {
 		}
 
 		if (Vector2Distance(worker.pos, buildingCenter) < 5.0f) {
-			worker.isCarryingWood = false;
+			if (worker.isCarryingWood) {
+				worker.isCarryingWood = false;
+				targetBuilding->treeCount++;
+			}
+			else {
+				worker.isCarryingCoal = false;
+				if (Smelter* s = dynamic_cast<Smelter*>(targetBuilding)) {
+					s->coalCount++;
+				}
+			}
 			worker.currentPath.clear();
 			worker.connectionIdx = 0;
 			worker.goalPos = Vector2{ -1, -1 };
-			targetBuilding->treeCount++;
 			return;
 		}
 
@@ -154,10 +172,28 @@ void DistributinAction::execute(Worker& worker) {
 	}
 	else {
 		CoalMile* source = nullptr;
+		bool pickupCoal = false;
+
+		Smelter* smelterInNeed = nullptr;
+		for (auto& building : worker.buildings) {
+			if (Smelter* s = dynamic_cast<Smelter*>(building)) {
+				if (s->coalCount < 10) {
+					smelterInNeed = s;
+					break;
+				}
+			}
+		}
+
 		for (auto& building : worker.buildings) {
 			if (CoalMile* cm = dynamic_cast<CoalMile*>(building)) {
+				if (smelterInNeed && cm->coalCount > 0) {
+					source = cm;
+					pickupCoal = true;
+					break;
+				}
 				if (cm->treeCount > 0) {
 					source = cm;
+					pickupCoal = false;
 					break;
 				}
 			}
@@ -177,11 +213,17 @@ void DistributinAction::execute(Worker& worker) {
 		}
 
 		if (Vector2Distance(worker.pos, sourceCenter) < 5.0f) {
-			worker.isCarryingWood = true;
+			if (pickupCoal) {
+				worker.isCarryingCoal = true;
+				source->coalCount--;
+			}
+			else {
+				worker.isCarryingWood = true;
+				source->treeCount--;
+			}
 			worker.currentPath.clear();
 			worker.connectionIdx = 0;
 			worker.goalPos = Vector2{ -1, -1 };
-			source->treeCount--;
 			return;
 		}
 
@@ -329,6 +371,7 @@ void CollectIronAction::execute(Worker& worker) {
 		if (worker.goalPos.x != bCenter.x || worker.goalPos.y != bCenter.y) {
 			worker.currentPath.clear();
 			worker.goalPos = bCenter;
+			return;
 		}
 		if (Vector2Distance(worker.pos, bCenter) < 8.0f) {
 			worker.isCarryingIron = false;
