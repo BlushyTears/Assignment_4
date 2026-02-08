@@ -58,15 +58,15 @@ UnitToTrain Game::getNextUnitToTrain() {
 		targetResourceCount->builderCount++;
 		return EnumBuilder;
 	}
-	else if (targetResourceCount->coalMinerCount < 1 && targetResourceCount->coalMileCount >= 1) {
+	else if (targetResourceCount->coalMinerCount < 1 && targetResourceCount->coalMileCount >= 0) {
 		targetResourceCount->coalMinerCount++;
 		return EnumCoalMiner;
 	}
-	else if (targetResourceCount->armSmithCount < 1 && targetResourceCount->armsmithForgeCount >= 1) {
+	else if (targetResourceCount->armSmithCount < 1 && targetResourceCount->armsmithForgeCount >= 0) {
 		targetResourceCount->armSmithCount++;
 		return EnumArmSmith;
 	}
-	else if (targetResourceCount->smelterCount < 1 && targetResourceCount->smelterBuildingCount >= 1) {
+	else if (targetResourceCount->smelterCount < 1 && targetResourceCount->smelterBuildingCount >= 0) {
 		targetResourceCount->smelterCount++;
 		return EnumSmelter;
 	}
@@ -92,6 +92,14 @@ void Game::callUnits() {
 	}
 }
 
+void Game::trainSoldiers() {
+	//for (auto& unit : units) {
+	//	if (unit.isReadyToTrain) {
+	//	
+	//	}
+	//}
+}
+
 void Game::update() {
 	debugText();
 
@@ -112,28 +120,23 @@ void Game::convertUnit(UnitBase* unitPtr, UnitToTrain unitType) {
 	for (auto& unit : units) {
 		if (unit.get() == unitPtr) {
 			Vector2 tempPos = unitPtr->pos;
-			actualResourceCount->workerCount--;
+			targetResourceCount->workerCount--;
 
 			switch (unitType) {
 			case EnumScout:
 				unit = std::make_unique<Scout>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
-				actualResourceCount->scoutCount++;
 				break;
 			case EnumCoalMiner:
 				unit = std::make_unique<CoalWorker>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
-				actualResourceCount->coalMinerCount++;
 				break;
 			case EnumBuilder:
 				unit = std::make_unique<Builder>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
-				actualResourceCount->builderCount++;
 				break;
 			case EnumSmelter:
 				unit = std::make_unique<SmelterWorker>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
-				actualResourceCount->smelterCount++;
 				break;
 			case EnumArmSmith:
 				unit = std::make_unique<ArmSmithWorker>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
-				actualResourceCount->armSmithCount++;
 				break;
 			case EnumNone:
 				break;
@@ -144,9 +147,10 @@ void Game::convertUnit(UnitBase* unitPtr, UnitToTrain unitType) {
 	}
 }
 
-// Idea: Spawn buildings once we have dicovered enough terrain to practically place them close to each other with some variety
+// Implenetation details: We first spawn a "schematic" of a building which serves the purpose of being a place where units can put materials
+// But the building isn't built yet, so it won't have any functional purpose beyond.
 void Game::spawnBuildings() {
-	if (gameMap->scoutedTiles->walkablePaths.size() < 100)
+	if (gameMap->scoutedTiles->walkablePaths.size() < 120)
 		return;
 
 	bool hasFoundGoodLand = false;

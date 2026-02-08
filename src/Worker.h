@@ -18,32 +18,7 @@ struct ResourceTracker;
 struct Worker;
 struct Timer;
 struct Building;
-
-// Idle state stuff
-struct IdleAction : Action<Worker> {
-	void execute(Worker& worker) override;
-};
-
-struct IdleState : State<Worker> {
-	IdleAction ideling;
-	std::vector<Transition<Worker>*> transitions;
-
-	std::vector<Action<Worker>*> getActions() override { return { &ideling }; };
-	std::vector<Transition<Worker>*> getTransitions() override { return transitions; };
-};
-
-struct TargetIdleState : TargetState<Worker> {
-	IdleState* idleState;
-
-	TargetIdleState(IdleState* s) : idleState(s) {}
-
-	std::vector<Action<Worker>*> getActions() override { return {}; }
-	State<Worker>* getTargetState() override { return idleState; }
-};
-
-struct IdleDecision : Decision<Worker> {
-	DecisionTreeNode<Worker>* getBranch(Worker& worker) override;
-};
+struct TrainingCamp;
 
 // Farming trees
 struct CollectWoodAction : Action<Worker> {
@@ -125,23 +100,44 @@ struct DistributingDecision : Decision<Worker> {
 	DecisionTreeNode<Worker>* getBranch(Worker& worker) override;
 };
 
+struct TrainUnitAction : Action<Worker> {
+	void execute(Worker& worker) override;
+};
+
+struct TrainUnitState : State<Worker> {
+	TrainUnitAction trainingUnit;
+	std::vector<Transition<Worker>*> transitions;
+
+	std::vector<Action<Worker>*> getActions() override { return { &trainingUnit }; };
+	std::vector<Transition<Worker>*> getTransitions() override { return transitions; };
+};
+
+struct TargetTrainUnitState : TargetState<Worker> {
+	TrainUnitState* trainingUnitState;
+
+	TargetTrainUnitState(TrainUnitState* s) : trainingUnitState(s) {}
+
+	std::vector<Action<Worker>*> getActions() override { return {}; }
+	State<Worker>* getTargetState() override { return trainingUnitState; }
+};
+
+struct TrainUnitDecision : Decision<Worker> {
+	DecisionTreeNode<Worker>* getBranch(Worker& worker) override;
+};
+
 struct Worker : UnitBase {
-	IdleState* idelingState;
 	CollectWoodState* collectingWoodState;
 	CollectIronState* collectingIronState;
 	DistributingState* distributingState;
 
-	TargetIdleState* targetIdeling;
 	TargetCollectWoodState* targetWoodcutting;
 	TargetCollectIronState* targetIronCollecting;
 	TargetDistributingState* targetDistribution;
 
-	IdleDecision* idleCheck;
 	CollectWoodDecision* collectWoodCheck;
 	CollectIronDecision* collectIronCheck;
 	DistributingDecision* distributeCheck;
 
-	DecisionTreeTransition<Worker>* toIdle;
 	DecisionTreeTransition<Worker>* toWoodcutting;
 	DecisionTreeTransition<Worker>* toIronCollecting;
 	DecisionTreeTransition<Worker>* toDistributing;
@@ -151,16 +147,18 @@ struct Worker : UnitBase {
 
 	Timer chopTimer;
 
-	int treeTileTargetIdx = -1; // which tree on some particular tile do we target (1-5)
-	int treeTargetIdx = -1; // which tree on some particular tile do we target (1-5)
+	int treeTileTargetIdx = -1;
+	int treeTargetIdx = -1;
 	bool isChoppingWood = false;
 	bool isCarryingWood = false;
 	bool isCarryingIron = false;
 
 	bool isCarryingCoal = false;
+	bool isCarryingIronBar = false;
+	bool isCarryingIronArrow = false;
 
-	//MapIndex treeToChop;
-	//bool hasWoodLogs = false;
+	bool isReadyToTrain = false;
+	TrainingCamp* trainingCamp = nullptr;
 
 	Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu);
 	~Worker();
@@ -172,6 +170,15 @@ struct Worker : UnitBase {
 		}
 		if (isCarryingIron) {
 			DrawCircle(pos.x + size, pos.y + size, size, BLACK);
+		}
+		if (isCarryingCoal) {
+			DrawCircle(pos.x + size, pos.y - size, size, GRAY);
+		}
+		if (isCarryingIronBar) {
+			DrawRectangle(pos.x + size, pos.y, size * 2, size, LIGHTGRAY);
+		}
+		if (isCarryingIronArrow) {
+			DrawLine(pos.x + size, pos.y, pos.x + size * 2, pos.y + size, WHITE);
 		}
 
 		DrawCircle(pos.x, pos.y, size, RED);

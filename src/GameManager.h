@@ -31,7 +31,8 @@ struct ResourceTracker {
 	int coalCount = 0;
 	int ironOreCount = 0;
 	int ironBarCount = 0;
-	int swordCount = 0;
+	int ironArrowCount = 0;
+	int ironSwordCount = 0;
 	// Buildings:
 	int coalMileCount = 0;
 	int smelterBuildingCount = 0;
@@ -48,6 +49,7 @@ struct ResourceTracker {
 
 	// this is really bad and lazy
 	int workersDistributing = 0;
+	int woodInCoalMile = 0;
 };
 
 // Final hybrid-based design for units:
@@ -109,12 +111,24 @@ struct Game {
 	void updateTrainingUnits();
 	void callUnits();
 	void controlBuildings();
+	void trainSoldiers();
 	void update();
 
 	void debugText() {
 		int fps = GetFPS();
 		string fpsString = "FPS: " + to_string(fps);
-		const char* fpsChar = fpsString.c_str();
-		DrawText(fpsChar, 20, 1180, 12, RED);
+		DrawText(fpsString.c_str(), 20, 1180, 12, RED);
+
+		string workerCount = "Worker count: " + to_string(targetResourceCount->workerCount);
+		DrawText(workerCount.c_str(), 100, 1180, 12, RED);
+
+		string scoutCount = "Scout count: " + to_string(targetResourceCount->scoutCount);
+		DrawText(scoutCount.c_str(), 225, 1180, 12, BLUE);
+
+		string builderCount = "Builder count: " + to_string(targetResourceCount->builderCount);
+		DrawText(builderCount.c_str(), 325, 1180, 12, ORANGE);
+
+		string coalMinercount = "Coal Operator count: " + to_string(targetResourceCount->coalMinerCount);
+		DrawText(coalMinercount.c_str(), 450, 1180, 12, GRAY);
 	}
 };

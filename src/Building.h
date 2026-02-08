@@ -45,13 +45,10 @@ struct CoalMile : Building {
 	void update() override;
 
 	void startBuildProcess() override {
-		if (treeCount >= minTreesNeeded) {
+		if (!isBuilt && !isBuilding && treeCount >= minTreesNeeded) {
 			treeCount -= minTreesNeeded;
+			isBuilding = true;
 		}
-	}
-
-	void putTreeInCoalMile(Worker& worker) {
-		treeCount++;
 	}
 
 	void draw() override {
@@ -82,9 +79,10 @@ struct Smelter : Building {
 	int coalCostPerIronBar = 2;
 	int ironBarCount = 0;
 	int ironArrowCount = 0;
+	int ironArrowsGoal = 3;
+	bool producingArrows = false;
 
 	int coalCount = 0;
-
 	bool isActive = false;
 
 	Smelter(Vector2 _pos, ResourceTracker* _rt, int _tileSize) {
@@ -96,14 +94,10 @@ struct Smelter : Building {
 	void update() override;
 
 	void startBuildProcess() override {
-		if (treeCount >= minTreesNeeded) {
+		if (!isBuilt && !isBuilding && treeCount >= minTreesNeeded) {
 			treeCount -= minTreesNeeded;
-			//resourceTracker->treeCount -= minTreesNeeded;
+			isBuilding = true;
 		}
-	}
-
-	void putTreeInCoalMile(Worker& worker) {
-		treeCount++;
 	}
 
 	void draw() override {
@@ -120,27 +114,33 @@ struct Smelter : Building {
 	}
 
 	void debugText() override {
+		std::string text1 = "Trees in smelter: " + std::to_string(treeCount);
+		DrawText(text1.c_str(), 220, 1000, 16, PURPLE);
+
 		std::string text2 = "Coal in smelter: " + std::to_string(coalCount);
-		DrawText(text2.c_str(), 220, 1000, 16, PURPLE);
+		DrawText(text2.c_str(), 220, 1020, 16, PURPLE);
 
 		std::string text3 = "Iron ores in smelter: " + std::to_string(ironOreCount);
-		DrawText(text3.c_str(), 220, 1020, 16, PURPLE);
+		DrawText(text3.c_str(), 220, 1040, 16, PURPLE);
 
 		std::string text4 = "Iron bars in smelter: " + std::to_string(ironBarCount);
-		DrawText(text4.c_str(), 220, 1040, 16, PURPLE);
+		DrawText(text4.c_str(), 220, 1060, 16, PURPLE);
 
 		std::string text5 = "Iron arrows in smelter: " + std::to_string(ironArrowCount);
-		DrawText(text5.c_str(), 220, 1060, 16, PURPLE);
+		DrawText(text5.c_str(), 220, 1080, 16, PURPLE);
 
-		std::string text1 = "Trees in smelter: " + std::to_string(treeCount);
-		DrawText(text1.c_str(), 220, 1080, 16, PURPLE);
 	}
 };
 
 struct ArmSmith : Building {
 	ResourceTracker* resourceTracker = nullptr;
 	int coalCount = 0;
+	int coalNeeded = 2;
 	int ironArrowCount = 0;
+	int ironArrowsNeeded = 3;
+	int ironBarCount = 0;
+	int ironBarNeeded = 1;
+
 	int ironSwordCount = 0;
 	bool isActive = false;
 
@@ -150,33 +150,14 @@ struct ArmSmith : Building {
 		tileSize = _tileSize;
 	}
 
-	void update() override {
-		debugText();
-
-		if (!isBuilt) return;
-
-		if (isActive) {
-			produceTimer.updateTimer();
-			if (produceTimer.hasTimerEnded()) {
-				coalCount++;
-				isActive = false;
-			}
-		}
-		else if (treeCount >= minTreesNeeded) {
-			isActive = true;
-			treeCount -= minTreesNeeded;
-			produceTimer.setNewTimer(6);
-		}
-	}
+	void update() override;
 
 	void startBuildProcess() override {
-		if (treeCount >= minTreesNeeded) {
+		if (!isBuilt && !isBuilding && treeCount >= minTreesNeeded && ironArrowCount >= ironArrowsNeeded) {
 			treeCount -= minTreesNeeded;
+			ironArrowCount -= ironArrowsNeeded;
+			isBuilding = true;
 		}
-	}
-
-	void putTreeInCoalMile(Worker& worker) {
-		treeCount++;
 	}
 
 	void draw() override {
@@ -188,26 +169,35 @@ struct ArmSmith : Building {
 			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
 		}
 		if (isActive) {
-			DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, RED);
+			DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, PINK);
 		}
 	}
 
 	void debugText() override {
-		std::string text = "Arrows in armsmith: " + std::to_string(ironArrowCount);
-		DrawText(text.c_str(), 420, 1000, 16, PURPLE);
+		std::string text2 = "Trees in arm smith: " + std::to_string(treeCount);
+		DrawText(text2.c_str(), 420, 1000, 16, PURPLE);
 
-		std::string text4 = "Iron sword in armsmith: " + std::to_string(ironSwordCount);
+		std::string text4 = "Iron bars in armsmith: " + std::to_string(ironBarCount);
 		DrawText(text4.c_str(), 420, 1020, 16, PURPLE);
 
-		std::string text2 = "Trees in arm smith: " + std::to_string(treeCount);
-		DrawText(text2.c_str(), 420, 1040, 16, PURPLE);
+		std::string text = "Iron Arrows in armsmith: " + std::to_string(ironArrowCount);
+		DrawText(text.c_str(), 420, 1040, 16, PURPLE);
+
+		std::string text3 = "Iron sword in armsmith: " + std::to_string(ironSwordCount);
+		DrawText(text3.c_str(), 420, 1060, 16, PURPLE);
+
+		std::string text5 = "Coal count in arm smith: " + std::to_string(coalCount);
+		DrawText(text5.c_str(), 420, 1080, 16, PURPLE);
 	}
 };
 
 struct TrainingCamp : Building {
 	ResourceTracker* resourceTracker = nullptr;
+
+	bool isWorkerAvailable = false;
 	bool isActive = false;
 	int swordCount = 0;
+	int swordsNeeded = 1;
 
 	TrainingCamp(Vector2 _pos, ResourceTracker* _rt, int _tileSize) {
 		pos = _pos;
@@ -215,32 +205,13 @@ struct TrainingCamp : Building {
 		tileSize = _tileSize;
 	}
 
-	void update() override {
-		debugText();
-
-		if (!isBuilt) return;
-
-		if (isActive) {
-			produceTimer.updateTimer();
-			if (produceTimer.hasTimerEnded()) {
-				isActive = false;
-			}
-		}
-		else if (treeCount >= minTreesNeeded) {
-			isActive = true;
-			treeCount -= minTreesNeeded;
-			produceTimer.setNewTimer(6);
-		}
-	}
+	void update() override;
 
 	void startBuildProcess() override {
-		if (treeCount >= minTreesNeeded) {
+		if (!isBuilt && !isBuilding && treeCount >= minTreesNeeded) {
 			treeCount -= minTreesNeeded;
+			isBuilding = true;
 		}
-	}
-
-	void putTreeInCoalMile(Worker& worker) {
-		treeCount++;
 	}
 
 	void draw() override {
@@ -257,10 +228,10 @@ struct TrainingCamp : Building {
 	}
 
 	void debugText() override {
-		std::string text = "Swords in training camp: " + std::to_string(swordCount);
-		DrawText(text.c_str(), 620, 1000, 16, PURPLE);
+		std::string text1 = "Trees in training camp: " + std::to_string(treeCount);
+		DrawText(text1.c_str(), 650, 1000, 16, PURPLE);
 
-		std::string text2 = "Trees in training camp: " + std::to_string(treeCount);
-		DrawText(text2.c_str(), 620, 1020, 16, PURPLE);
+		std::string text2 = "Swords in training camp: " + std::to_string(swordCount);
+		DrawText(text2.c_str(), 650, 1020, 16, PURPLE);
 	}
 };

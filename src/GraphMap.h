@@ -137,6 +137,9 @@ struct ChartedMap {
             if (mapData[i] == 'M') {
                 walkablePaths.push_back({ xAccumulator , yAccumulator });
             }
+            if (mapData[i] == 'T') {
+                walkablePaths.push_back({ xAccumulator , yAccumulator });
+            }
             if (mapData[i] == '\n') {
                 yAccumulator += tileSize;
                 xAccumulator = 0;

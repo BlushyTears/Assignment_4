@@ -28,11 +28,10 @@ struct ResourceTracker;
 struct Building;
 
 struct UnitBase {
-	Vector2 pos; // current pos
-	Vector2 targetPos; // sub-goal in a path
-	Vector2 goalPos; // final goal in a path
-	// All units should be equally big so it's hard coded here
-	float size = 1.0f;
+	Vector2 pos;
+	Vector2 targetPos;
+	Vector2 goalPos;
+	float size = 0.8f;
 	float unitSpeed = 0.6f;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
@@ -65,31 +64,20 @@ struct UnitBase {
 	};
 
 	void moveUnitTowardsInternalGoal() {
-		if (Vector2Distance(targetPos, pos) > 1.0f) {
-			pos += Vector2Normalize(targetPos - pos) * unitSpeed;
+		Vector2 steering = { 0, 0 };
+
+		if (goalPos.x != -1 && Vector2Distance(pos, targetPos) > 0.5f) {
+			steering += Vector2Normalize(targetPos - pos) * unitSpeed;
 		}
 
-		float minDist = size * 2.0f;
-
-		// avoid collision with other agents
-		for (auto& unit : *_unitsReference) {
-			if (unit && unit.get() != this) {
-				Vector2 diff = pos - unit->pos;
-				float distSq = Vector2LengthSqr(diff);
-
-				if (distSq < minDist * minDist && distSq > 0.0f) {
-					float dist = sqrtf(distSq);
-					pos += (diff / dist) * (minDist - dist) * 0.5f;
-				}
-			}
-		}
+		pos += steering;
 	}
 };
 
-// Scout can be created with 1 worker
 struct Scout : UnitBase {
-	Scout(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu) 
-		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {}
+	Scout(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu)
+		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {
+	}
 	void renderUnit() {
 		DrawCircle(pos.x, pos.y, size, BLUE);
 	}
@@ -112,8 +100,9 @@ struct Builder : UnitBase {
 };
 
 struct CoalWorker : UnitBase {
-	CoalWorker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu) 
-		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {}
+	CoalWorker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu)
+		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {
+	}
 
 	Building* targetBuilding = nullptr;
 	void commandUnit() override;
@@ -125,7 +114,8 @@ struct CoalWorker : UnitBase {
 
 struct SmelterWorker : UnitBase {
 	SmelterWorker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu)
-		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {}
+		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {
+	}
 
 	Building* targetBuilding = nullptr;
 	void commandUnit() override;
