@@ -17,7 +17,9 @@
 #include "Building.h"
 
 struct Map;
+struct Worker;
 struct Building;
+struct TrainingCamp;
 inline stringstream transcribeData(const string& _path);
 
 constexpr int SCREEN_WIDTH = 1000;
@@ -32,7 +34,7 @@ struct ResourceTracker {
 	int ironOreCount = 0;
 	int ironBarCount = 0;
 	int ironArrowCount = 0;
-	int ironSwordCount = 0;
+	int ironSwordCount = 00;
 	// Buildings:
 	int coalMileCount = 0;
 	int smelterBuildingCount = 0;
@@ -94,6 +96,10 @@ struct Game {
 	std::vector<std::unique_ptr<UnitBase>> units;
 	std::vector<Event> trainingUnits;
 
+	std::vector<Worker*> soldiersToTrain;
+
+	TrainingCamp* tc = nullptr;
+
 	int initialFormationColumns = 11;
 	int xCount = 1;
 	int yCount = 1;
@@ -111,7 +117,6 @@ struct Game {
 	void updateTrainingUnits();
 	void callUnits();
 	void controlBuildings();
-	void trainSoldiers();
 	void update();
 
 	void debugText() {
@@ -129,6 +134,12 @@ struct Game {
 		DrawText(builderCount.c_str(), 325, 1180, 12, ORANGE);
 
 		string coalMinercount = "Coal Operator count: " + to_string(targetResourceCount->coalMinerCount);
-		DrawText(coalMinercount.c_str(), 450, 1180, 12, GRAY);
+		DrawText(coalMinercount.c_str(), 425, 1180, 12, GRAY);
+
+		string soldiercount = "Soldier count: " + to_string(targetResourceCount->soldierCount);
+		DrawText(soldiercount.c_str(), 100, 1160, 12, GOLD);
+
+		string smelterCount = "Smelter count: " + to_string(targetResourceCount->smelterCount);
+		DrawText(smelterCount.c_str(), 225, 1180, 12, BLUE);
 	}
 };

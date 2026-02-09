@@ -11,18 +11,22 @@ Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::
 	collectingWoodState = new CollectWoodState();
 	collectingIronState = new CollectIronState();
 	distributingState = new DistributingState();
+	trainingState = new TrainUnitState();
 
 	targetWoodcutting = new TargetCollectWoodState(collectingWoodState);
 	targetIronCollecting = new TargetCollectIronState(collectingIronState);
 	targetDistribution = new TargetDistributingState(distributingState);
+	targetTraining = new TargetTrainUnitState(trainingState);
 
 	collectWoodCheck = new CollectWoodDecision();
 	collectIronCheck = new CollectIronDecision();
 	distributeCheck = new DistributingDecision();
+	trainingCheck = new TrainUnitDecision();
 
 	toWoodcutting = new DecisionTreeTransition<Worker>();
 	toIronCollecting = new DecisionTreeTransition<Worker>();
 	toDistributing = new DecisionTreeTransition<Worker>();
+	toTraining = new DecisionTreeTransition<Worker>();
 
 	collectWoodCheck->trueNode = targetWoodcutting;
 	collectWoodCheck->falseNode = nullptr;
@@ -33,15 +37,20 @@ Worker::Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::
 	distributeCheck->trueNode = targetDistribution;
 	distributeCheck->falseNode = nullptr;
 
+	trainingCheck->trueNode = targetTraining;
+	trainingCheck->falseNode = nullptr;
+
 	toWoodcutting->decisionTreeRoot = collectWoodCheck;
 	toIronCollecting->decisionTreeRoot = collectIronCheck;
 	toDistributing->decisionTreeRoot = distributeCheck;
+	toTraining->decisionTreeRoot = trainingCheck;
 
-	collectingWoodState->transitions.push_back(toIronCollecting);
-	collectingWoodState->transitions.push_back(toDistributing);
-
-	collectingIronState->transitions.push_back(toWoodcutting);
 	collectingIronState->transitions.push_back(toDistributing);
+	collectingWoodState->transitions.push_back(toDistributing);
+	collectingWoodState->transitions.push_back(toIronCollecting);
+	collectingIronState->transitions.push_back(toWoodcutting);
+	collectingIronState->transitions.push_back(toTraining);
+	collectingWoodState->transitions.push_back(toTraining);
 
 	sm = new StateMachine<Worker>(collectingWoodState);
 
@@ -66,7 +75,7 @@ Worker::~Worker()
 }
 
 DecisionTreeNode<Worker>* DistributingDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount > 25 && worker.targetResourceTracker->workersDistributing < 5) {
+	if (worker.targetResourceTracker->treeCount > 25 && worker.targetResourceTracker->workersDistributing < 5 && !worker.isDevotedToBeSoldier) {
 		worker.targetResourceTracker->workersDistributing++;
 		std::cout << "Unit decided to be a distributer" << std::endl;
 		return this->trueNode;
@@ -75,14 +84,14 @@ DecisionTreeNode<Worker>* DistributingDecision::getBranch(Worker& worker) {
 }
 
 DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount <= 40 && !worker.isCarryingIron) {
+	if (worker.targetResourceTracker->treeCount <= 30 && !worker.isCarryingIron && !worker.isDevotedToBeSoldier) {
 		return this->trueNode;
 	}
 	return this->falseNode;
 }
 
 DecisionTreeNode<Worker>* CollectIronDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->ironOreCount <= 60 && worker.targetResourceTracker->treeCount > 80 && !worker.isCarryingWood) {
+	if (worker.targetResourceTracker->ironOreCount <= 30 && worker.targetResourceTracker->treeCount > 80 && !worker.isCarryingWood && !worker.isDevotedToBeSoldier) {
 		return this->trueNode;
 	}
 	return this->falseNode;
@@ -90,7 +99,9 @@ DecisionTreeNode<Worker>* CollectIronDecision::getBranch(Worker& worker) {
 
 DecisionTreeNode<Worker>* TrainUnitDecision::getBranch(Worker& worker) {
 	if (worker.targetResourceTracker->ironSwordCount > 0) {
-		return this->falseNode;
+		std::cout << "Unit decided to be a soldier, " << worker.targetResourceTracker->ironSwordCount << std::endl;
+		worker.targetResourceTracker->ironSwordCount--;
+		return this->trueNode;
 	}
 	return this->falseNode;
 }
@@ -98,23 +109,27 @@ DecisionTreeNode<Worker>* TrainUnitDecision::getBranch(Worker& worker) {
 void DistributinAction::execute(Worker& worker)
 {
 	string iron = "iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
-	DrawText(iron.c_str(), 300, 1110, 16, BLUE);
+	DrawText(iron.c_str(), 300, 1110, 12, BLUE);
 
 	string trees = "Global Treecount: " + to_string(worker.targetResourceTracker->treeCount);
-	DrawText(trees.c_str(), 300, 1130, 16, BLUE);
+	DrawText(trees.c_str(), 300, 1120, 12, BLUE);
 
 	string coal = "Coal mile tree count: " + to_string(worker.targetResourceTracker->woodInCoalMile);
-	DrawText(coal.c_str(), 300, 1150, 16, BLUE);
+	DrawText(coal.c_str(), 300, 1130, 12, BLUE);
+
+	string globalSwordCount = "Sword count: " + to_string(worker.targetResourceTracker->ironSwordCount);
+	DrawText(globalSwordCount.c_str(), 300, 1140, 12, BLUE);
 
 	if (worker.isCarryingWood || worker.isCarryingCoal ||
-		worker.isCarryingIronBar || worker.isCarryingIronArrow) {
+		worker.isCarryingIronBar || worker.isCarryingIronArrow ||
+		worker.isCarryingIronSword) {
 		if (worker.buildings.empty())
 			return;
 
 		Building* targetBuilding = nullptr;
 
 		// ugly to cast all the time instead of cache the buildings
-		// but in a reality when buildings are changing, this is somehow justified (Although maybe it should be done less often)
+		// but in a reality when buildings available are changing, this is somehow justified (Although maybe it should be done less often)
 		if (worker.isCarryingWood) {
 			for (auto& building : worker.buildings) {
 				if (building
@@ -123,6 +138,16 @@ void DistributinAction::execute(Worker& worker)
 					&& !building->isBuilding) {
 					targetBuilding = building;
 					break;
+				}
+			}
+		}
+		else if (worker.isCarryingIronSword) {
+			for (auto& building : worker.buildings) {
+				if (TrainingCamp* tc = dynamic_cast<TrainingCamp*>(building)) {
+					if (tc->isBuilt) {
+						targetBuilding = tc;
+						break;
+					}
 				}
 			}
 		}
@@ -161,12 +186,13 @@ void DistributinAction::execute(Worker& worker)
 			}
 		}
 
+		// sanity reset (maybe just delete this though)
 		if (!targetBuilding) {
 			worker.isCarryingWood = false;
 			worker.isCarryingCoal = false;
 			worker.isCarryingIronBar = false;
 			worker.isCarryingIronArrow = false;
-
+			worker.isCarryingIronSword = false;
 			worker.goalPos = { -1, -1 };
 			return;
 		}
@@ -182,6 +208,7 @@ void DistributinAction::execute(Worker& worker)
 			worker.goalPos = buildingCenter;
 		}
 
+
 		// check what we're carrying and compare against the building we're closest to
 		if (Vector2Distance(worker.pos, buildingCenter) < 8.0f) {
 			if (worker.isCarryingWood)
@@ -191,6 +218,12 @@ void DistributinAction::execute(Worker& worker)
 					s->coalCount++;
 				else if (ArmSmith* a = dynamic_cast<ArmSmith*>(targetBuilding))
 					a->coalCount++;
+			}
+			else if (worker.isCarryingIronSword) {
+				if (TrainingCamp* tc = dynamic_cast<TrainingCamp*>(targetBuilding)) {
+					tc->swordCount++;
+					worker.targetResourceTracker->ironSwordCount++;
+				}
 			}
 			else if (worker.isCarryingIronArrow) {
 				if (ArmSmith* a = dynamic_cast<ArmSmith*>(targetBuilding)) 
@@ -205,6 +238,7 @@ void DistributinAction::execute(Worker& worker)
 			worker.isCarryingCoal = false;
 			worker.isCarryingIronBar = false;
 			worker.isCarryingIronArrow = false;
+			worker.isCarryingIronSword = false;
 
 			worker.currentPath.clear();
 			worker.connectionIdx = 0;
@@ -224,15 +258,14 @@ void DistributinAction::execute(Worker& worker)
 
 		bool woodNeeded = false;
 		for (auto& b : worker.buildings) {
-			if (b &&
-				!dynamic_cast<CoalMile*>(b) &&
+			if (b && !dynamic_cast<CoalMile*>(b) &&
 				b->treeCount < b->minTreesNeeded &&
-				!b->isBuilding) {
+				!b->isBuilding &&
+				!b->isBuilt) {
 				woodNeeded = true;
 				break;
 			}
 		}
-
 		if (woodNeeded) {
 			for (auto& b : worker.buildings) {
 				if (CoalMile* cm = dynamic_cast<CoalMile*>(b)) {
@@ -246,6 +279,13 @@ void DistributinAction::execute(Worker& worker)
 		}
 		else {
 			for (auto& b : worker.buildings) {
+				if (ArmSmith* a = dynamic_cast<ArmSmith*>(b)) {
+					if (a->ironSwordCount > 0) {
+						source = a;
+						pickupType = 4;
+						break;
+					}
+				}
 				if (Smelter* s = dynamic_cast<Smelter*>(b)) {
 					if (s->ironBarCount > 0) {
 						source = s;
@@ -263,13 +303,18 @@ void DistributinAction::execute(Worker& worker)
 						bool coalNeeded = false;
 						for (auto& dest : worker.buildings) {
 							if (Smelter* ds = dynamic_cast<Smelter*>(dest)) {
-								if (ds->coalCount < 10) { coalNeeded = true; break; }
+								if (ds->coalCount < 10) { 
+									coalNeeded = true;
+									break;
+								}
 							}
 							if (ArmSmith* da = dynamic_cast<ArmSmith*>(dest)) {
-								if (da->coalCount < 15) { coalNeeded = true; break; }
+								if (da->coalCount < 15) { 
+									coalNeeded = true;
+									break;
+								}
 							}
 						}
-
 						if (coalNeeded) {
 							source = cm;
 							pickupType = 1;
@@ -312,6 +357,10 @@ void DistributinAction::execute(Worker& worker)
 				worker.isCarryingIronArrow = true;
 				((Smelter*)source)->ironArrowCount--;
 			}
+			else if (pickupType == 4) {
+				worker.isCarryingIronSword = true;
+				((ArmSmith*)source)->ironSwordCount--;
+			}
 
 			worker.currentPath.clear();
 			worker.connectionIdx = 0;
@@ -338,17 +387,19 @@ void DistributinAction::execute(Worker& worker)
 		worker.targetPos = worker.goalPos;
 }
 
-
 void CollectWoodAction::execute(Worker& worker)
 {
 	string iron = "iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
-	DrawText(iron.c_str(), 300, 1110, 16, RED);
+	DrawText(iron.c_str(), 300, 1110, 12, RED);
 
 	string trees = "Global Treecount: " + to_string(worker.targetResourceTracker->treeCount);
-	DrawText(trees.c_str(), 300, 1130, 16, RED);
+	DrawText(trees.c_str(), 300, 1120, 12, RED);
 
 	string coal = "Coal mile tree count: " + to_string(worker.targetResourceTracker->woodInCoalMile);
-	DrawText(coal.c_str(), 300, 1150, 16, RED);
+	DrawText(coal.c_str(), 300, 1130, 12, RED);
+
+	string globalSwordCount = "Sword count: " + to_string(worker.targetResourceTracker->ironSwordCount);
+	DrawText(globalSwordCount.c_str(), 300, 1140, 12, RED);
 
 	if (worker.isCarryingWood)
 	{
@@ -429,15 +480,17 @@ void CollectWoodAction::execute(Worker& worker)
 }
 
 void CollectIronAction::execute(Worker& worker) {
-
 	string iron = "iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
-	DrawText(iron.c_str(), 300, 1110, 16, ORANGE);
+	DrawText(iron.c_str(), 300, 1110, 12, ORANGE);
 
 	string trees = "Global Treecount: " + to_string(worker.targetResourceTracker->treeCount);
-	DrawText(trees.c_str(), 300, 1130, 16, ORANGE);
+	DrawText(trees.c_str(), 300, 1120, 12, ORANGE);
 
 	string coal = "Coal mile tree count: " + to_string(worker.targetResourceTracker->woodInCoalMile);
-	DrawText(coal.c_str(), 300, 1150, 16, ORANGE);
+	DrawText(coal.c_str(), 300, 1130, 12, ORANGE);
+
+	string globalSwordCount = "Sword count: " + to_string(worker.targetResourceTracker->ironSwordCount);
+	DrawText(globalSwordCount.c_str(), 300, 1140, 12, ORANGE);
 
 	if (worker.isCarryingIron) {
 		if (worker.buildings.empty())
@@ -540,14 +593,16 @@ void CollectIronAction::execute(Worker& worker) {
 void TrainUnitAction::execute(Worker& worker)
 {
 	// unit is at training camp and therefore let game manager train it
-	if (worker.trainingCamp != nullptr && worker.trainingCamp->isWorkerAvailable) {
+	if (worker.isReadyToTrain) {
+		if (worker.trainingCamp) 
+			worker.trainingCamp->isWorkerAvailable = true;
 		return;
 	}
 
 	if (worker.trainingCamp == nullptr) {
 		for (auto& building : worker.buildings) {
 			if (TrainingCamp* t = dynamic_cast<TrainingCamp*>(building)) {
-				building = t;
+				worker.trainingCamp = t;
 				break;
 			}
 		}
@@ -558,13 +613,24 @@ void TrainUnitAction::execute(Worker& worker)
 
 		if (worker.goalPos.x != bCenter.x || worker.goalPos.y != bCenter.y) {
 			worker.goalPos = bCenter;
-			worker.trainingCamp->isWorkerAvailable = true;
+			worker.calculateNewPath();
+		}
+
+		if (Vector2Distance(worker.pos, bCenter) < 8.0f) {
+			std::cout << "unit near training camp" << std::endl;
 			worker.isReadyToTrain = true;
+			worker.trainingCamp->isWorkerAvailable = true;
+			worker.currentPath.clear();
+			return;
+		}
+
+		if (worker.currentPath.empty()) {
+			worker.calculateNewPath();
 			return;
 		}
 	}
 
-	if (Vector2Distance(worker.pos, worker.targetPos) > 4.0f) 
+	if (Vector2Distance(worker.pos, worker.targetPos) > 1.0f) 
 		worker.moveUnitTowardsInternalGoal();
 	else if (worker.connectionIdx < (int)worker.currentPath.size()) {
 		worker.targetPos = { (float)worker.currentPath[worker.connectionIdx].toNode.x, (float)worker.currentPath[worker.connectionIdx].toNode.y };

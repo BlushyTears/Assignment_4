@@ -129,18 +129,22 @@ struct Worker : UnitBase {
 	CollectWoodState* collectingWoodState;
 	CollectIronState* collectingIronState;
 	DistributingState* distributingState;
+	TrainUnitState* trainingState;
 
 	TargetCollectWoodState* targetWoodcutting;
 	TargetCollectIronState* targetIronCollecting;
 	TargetDistributingState* targetDistribution;
+	TargetTrainUnitState* targetTraining;
 
 	CollectWoodDecision* collectWoodCheck;
 	CollectIronDecision* collectIronCheck;
 	DistributingDecision* distributeCheck;
+	TrainUnitDecision* trainingCheck;
 
 	DecisionTreeTransition<Worker>* toWoodcutting;
 	DecisionTreeTransition<Worker>* toIronCollecting;
 	DecisionTreeTransition<Worker>* toDistributing;
+	DecisionTreeTransition<Worker>* toTraining;
 
 	StateMachine<Worker>* sm;
 	std::vector<Action<Worker>*> plans;
@@ -156,6 +160,9 @@ struct Worker : UnitBase {
 	bool isCarryingCoal = false;
 	bool isCarryingIronBar = false;
 	bool isCarryingIronArrow = false;
+	bool isCarryingIronSword = false;
+
+	bool isDevotedToBeSoldier = false;
 
 	bool isReadyToTrain = false;
 	TrainingCamp* trainingCamp = nullptr;
@@ -166,18 +173,21 @@ struct Worker : UnitBase {
 	void commandUnit() override;
 	void renderUnit() {
 		if (isCarryingWood) {
-			DrawCircle(pos.x + size, pos.y + size, size, BROWN);
+			DrawCircle(pos.x + size, pos.y + size, size, GREEN);
 		}
 		if (isCarryingIron) {
-			DrawCircle(pos.x + size, pos.y + size, size, BLACK);
+			DrawCircle(pos.x + size, pos.y + size, size, DARKGRAY);
 		}
 		if (isCarryingCoal) {
-			DrawCircle(pos.x + size, pos.y - size, size, GRAY);
+			DrawCircle(pos.x + size, pos.y - size, size, BLACK);
 		}
 		if (isCarryingIronBar) {
 			DrawRectangle(pos.x + size, pos.y, size * 2, size, LIGHTGRAY);
 		}
 		if (isCarryingIronArrow) {
+			DrawLine(pos.x + size, pos.y, pos.x + size * 2, pos.y + size, DARKBROWN);
+		}
+		if (isCarryingIronSword) {
 			DrawLine(pos.x + size, pos.y, pos.x + size * 2, pos.y + size, WHITE);
 		}
 

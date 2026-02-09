@@ -55,6 +55,7 @@ void UnitBase::testTile() {
 	}
 }
 
+// since everything is decoupled we get the tile by comparing underlying path against the unit pos on screen (slow)
 int UnitBase::getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck, Vector2& _unitPos) {
 	if (pathToCheck.empty())
 		return 0;
@@ -157,7 +158,7 @@ void Builder::commandUnit() {
 					this->targetBuilding->isBuilding = true;
 					this->targetBuilding->buildTimer.setNewTimer(5);
 					this->targetBuilding->startBuildProcess();
-					targetResourceTracker->treeCount -= 10;
+					targetResourceTracker->treeCount -= targetBuilding->minTreesNeeded;
 				}
 
 				if (this->targetBuilding->isBuilding) {
@@ -274,6 +275,48 @@ void ArmSmithWorker::commandUnit() {
 			ArmSmith* s = dynamic_cast<ArmSmith*>(building);
 			if (s) {
 				targetBuilding = s;
+				break;
+			}
+		}
+		return;
+	}
+	if (currentPath.size() == 0) {
+		AwaitNewPath();
+	}
+	else {
+		if (Vector2Distance(pos, targetPos) > 10) {
+			moveUnitTowardsInternalGoal();
+		}
+		if (Vector2Distance(pos, targetPos) < 5) {
+			targetPos.x = (float)currentPath[connectionIdx].toNode.x;
+			targetPos.y = (float)currentPath[connectionIdx].toNode.y;
+			connectionIdx++;
+		}
+		if (connectionIdx >= (int)currentPath.size() - 1) {
+			currentPath.clear();
+			connectionIdx = 0;
+		}
+	}
+}
+
+void Soldier::calculateNewPath() {
+	auto ref = mapReference->scoutedTiles;
+	int targetBuildingIdx = getcurrentCorrespondingTile(ref->walkablePaths, targetBuilding->pos);
+	currentTileIdx = getcurrentCorrespondingTile(ref->walkablePaths, this->pos);
+	currentPath = ref->AStar(
+		ref->walkablePaths[currentTileIdx],
+		ref->walkablePaths[targetBuildingIdx],
+		ref->walkablePathsNeighboors);
+	UnitBase::calculateNewPath();
+}
+
+
+void Soldier::commandUnit() {
+	if (targetBuilding == nullptr) {
+		for (auto& building : buildings) {
+			CoalMile* cm = dynamic_cast<CoalMile*>(building);
+			if (cm) {
+				targetBuilding = cm;
 				break;
 			}
 		}

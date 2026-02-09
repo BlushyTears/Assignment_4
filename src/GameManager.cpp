@@ -38,6 +38,7 @@ void Game::startTrainingUnits(UnitToTrain unitType) {
 			case EnumScout: trainTime = 3.0f; break;
 			case EnumCoalMiner: trainTime = 3.0f; break;
 			case EnumBuilder: trainTime = 3.0f; break;
+			case EnumSoldier: trainTime = 5.0f; break;
 		}
 
 		if (worker && !worker->isTraining) {
@@ -70,6 +71,10 @@ UnitToTrain Game::getNextUnitToTrain() {
 		targetResourceCount->smelterCount++;
 		return EnumSmelter;
 	}
+	else if (!soldiersToTrain.empty() && targetResourceCount->soldierCount < 20) {
+		targetResourceCount->soldierCount++;
+		return EnumSoldier;
+	}
 	return EnumNone;
 }
 
@@ -78,6 +83,13 @@ void Game::callUnits() {
 	for (auto& unit : units) {
 		idx++;
 		unit->renderUnit();
+
+		Worker* worker = dynamic_cast<Worker*>(unit.get());
+		if (worker) {
+			if (worker->isReadyToTrain) {
+				soldiersToTrain.push_back(worker);
+			}
+		}
 
 		if (!unit->isTraining) {
 			unit->commandUnit();
@@ -90,14 +102,6 @@ void Game::callUnits() {
 		gameMap->searchQueue.pop();
 		unit->calculateNewPath();
 	}
-}
-
-void Game::trainSoldiers() {
-	//for (auto& unit : units) {
-	//	if (unit.isReadyToTrain) {
-	//	
-	//	}
-	//}
 }
 
 void Game::update() {
@@ -137,6 +141,9 @@ void Game::convertUnit(UnitBase* unitPtr, UnitToTrain unitType) {
 				break;
 			case EnumArmSmith:
 				unit = std::make_unique<ArmSmithWorker>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
+				break;
+			case EnumSoldier:
+				unit = std::make_unique<Soldier>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
 				break;
 			case EnumNone:
 				break;
@@ -191,6 +198,7 @@ void Game::spawnBuildings() {
 		}
 		else if (targetResourceCount->trainingCamp == 0) {
 			TrainingCamp* s = new TrainingCamp({ tile.position.x, tile.position.y }, targetResourceCount, TILE_SIZE);
+			tc = s;
 			gameMap->buildings.push_back(s);
 			targetResourceCount->trainingCamp++;
 		}

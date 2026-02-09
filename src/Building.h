@@ -18,9 +18,9 @@ struct Building {
 	Vector2 pos;
 	Timer produceTimer;
 	Timer buildTimer;
-	int treeCount = 0;
+	int treeCount = 10;
 	int minTreesNeeded = 10;
-	bool isBuilt = false;
+	bool isBuilt = true;
 	bool isBuilding = false;
 	int tileSize = 10;
 
@@ -56,7 +56,7 @@ struct CoalMile : Building {
 			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		else {
-			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
+			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, WHITE);
 			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		if (isActive) {
@@ -105,8 +105,8 @@ struct Smelter : Building {
 			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		else {
-			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
-			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
+			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, LIGHTGRAY);
+			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		if (isActive) {
 			DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, RED);
@@ -166,7 +166,7 @@ struct ArmSmith : Building {
 		}
 		else {
 			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
-			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGRAY);
+			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		if (isActive) {
 			DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, PINK);
@@ -196,7 +196,7 @@ struct TrainingCamp : Building {
 
 	bool isWorkerAvailable = false;
 	bool isActive = false;
-	int swordCount = 0;
+	int swordCount = 00;
 	int swordsNeeded = 1;
 
 	TrainingCamp(Vector2 _pos, ResourceTracker* _rt, int _tileSize) {
@@ -219,8 +219,8 @@ struct TrainingCamp : Building {
 			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		else {
-			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLUE);
-			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLUE);
+			DrawRectangle((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, DARKGREEN);
+			DrawRectangleLines((int)this->pos.x, (int)this->pos.y, tileSize, tileSize, BLACK);
 		}
 		if (isActive) {
 			DrawRectangle((int)this->pos.x + tileSize / 4, (int)this->pos.y + tileSize / 4, tileSize / 2, tileSize / 2, BLACK);

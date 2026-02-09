@@ -133,7 +133,20 @@ struct ArmSmithWorker : UnitBase {
 	Building* targetBuilding = nullptr;
 	void commandUnit() override;
 	void renderUnit() {
-		DrawCircle(pos.x, pos.y, size, ORANGE);
+		DrawCircle(pos.x, pos.y, size, BLACK);
+	};
+	void calculateNewPath() override;
+};
+
+struct Soldier : UnitBase {
+	Soldier(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu)
+		: UnitBase(_x, _y, _mp, _rt, _ur, _bu) {
+	}
+
+	Building* targetBuilding = nullptr;
+	void commandUnit() override;
+	void renderUnit() {
+		DrawCircle(pos.x, pos.y, size, GOLD);
 	};
 	void calculateNewPath() override;
 };

@@ -18,7 +18,7 @@ void CoalMile::update() {
         isActive = true;
         treeCount -= costPerCoal;
         resourceTracker->woodInCoalMile = treeCount;
-        produceTimer.setNewTimer(6);
+        produceTimer.setNewTimer(5);
     }
 }
 
@@ -82,12 +82,13 @@ void TrainingCamp::update() {
         produceTimer.updateTimer();
         if (produceTimer.hasTimerEnded()) {
             isActive = false;
+            isWorkerAvailable = false;
         }
     }
     else if (swordCount >= swordsNeeded && isWorkerAvailable) {
+        std::cout << "Training soldier, swords: " << swordCount << std::endl;
         isActive = true;
         swordCount -= swordsNeeded;
-        resourceTracker->ironSwordCount++;
-        produceTimer.setNewTimer(6);
+        produceTimer.setNewTimer(5);
     }
 }
