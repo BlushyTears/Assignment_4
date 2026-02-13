@@ -66,10 +66,10 @@ void UnitBase::terrainControl() {
 				Tile& tile = mapReference->renderedTiles[ny * 100 + nx];
 
 				if (tile.tileType == Grass) {
-					unitSpeed = 1.0f;
+					unitSpeed = resourceParameters.grassMovementSpeed;
 				}
 				else if (tile.tileType == Swamp) {
-					unitSpeed = 0.5f;
+					unitSpeed = resourceParameters.swampMovementSpeed;
 				}
 			}
 		}

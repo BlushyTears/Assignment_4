@@ -1,6 +1,9 @@
 #include "GameManager.h"
+#include "FileRead.h"
 
 Game::Game(int _initialUnits) {
+	setupStartingValues();
+
 	mapData = transcribeData("..//mapData.txt");
 	gameMap = new Map(mapData, SCREEN_WIDTH, TILE_SIZE);
 	targetResourceCount = new ResourceTracker();

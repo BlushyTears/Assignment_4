@@ -1,0 +1,2 @@
+grassMovementSpeed:1.0
+swampMovementSpeed:0.5

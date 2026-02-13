@@ -6,8 +6,9 @@
 
 #include <iostream>
 #include <vector>
-
 #include <random>
+
+#include <FileRead.h>
 
 inline int getRandomNumber(int min, int max) {
 	std::random_device dev;
@@ -32,7 +33,7 @@ struct UnitBase {
 	Vector2 targetPos;
 	Vector2 goalPos;
 	float size = 0.8f;
-	float unitSpeed = 1.0f;
+	float unitSpeed;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
 	int currentGoalTileIdx = 0;
@@ -50,7 +51,6 @@ struct UnitBase {
 	UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu);
 	bool isAwaitingNewPath = false;
 
-	void moveFile();
 	void testTile();
 	void AwaitNewPath();
 	int getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck, Vector2& _unitPos);
@@ -63,7 +63,7 @@ struct UnitBase {
 	};
 
 	void moveUnitTowardsInternalGoal() {
-		terrainControl(); // check if it's swamp or grass before moving
+		terrainControl(); // check if it's swamp or grass before moving unit
 		Vector2 steering = { 0, 0 };
 
 		if (goalPos.x != -1 && Vector2Distance(pos, targetPos) > 0.5f) {

@@ -112,7 +112,7 @@ struct ChartedMap {
     std::vector<NodeRecord> openList;
     std::unordered_map<int, int> positionToIndex;
 
-    int tileSize = 10;
+    int tileSize = 9;
     float xAccumulator;
     float yAccumulator;
 
