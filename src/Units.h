@@ -32,7 +32,7 @@ struct UnitBase {
 	Vector2 targetPos;
 	Vector2 goalPos;
 	float size = 0.8f;
-	float unitSpeed = 0.6f;
+	float unitSpeed = 1.0f;
 	const int TILE_SIZE = 10;
 	int currentTileIdx = 0;
 	int currentGoalTileIdx = 0;
@@ -54,16 +54,16 @@ struct UnitBase {
 	void testTile();
 	void AwaitNewPath();
 	int getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck, Vector2& _unitPos);
+	void terrainControl();
 	virtual void renderUnit() = 0;
 	virtual void commandUnit() = 0;
-
-	void updatePathfindingCooldown(float deltaTime);
 
 	virtual void calculateNewPath() {
 		isAwaitingNewPath = false;
 	};
 
 	void moveUnitTowardsInternalGoal() {
+		terrainControl(); // check if it's swamp or grass before moving
 		Vector2 steering = { 0, 0 };
 
 		if (goalPos.x != -1 && Vector2Distance(pos, targetPos) > 0.5f) {

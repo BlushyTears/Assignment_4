@@ -55,6 +55,27 @@ void UnitBase::testTile() {
 	}
 }
 
+void UnitBase::terrainControl() {
+	int tileX = (int)(pos.x / 10);
+	int tileY = (int)(pos.y / 10);
+	for (int dy = -1; dy <= 1; dy++) {
+		for (int dx = -1; dx <= 1; dx++) {
+			int nx = tileX + dx;
+			int ny = tileY + dy;
+			if (nx >= 0 && nx < 100 && ny >= 0 && ny < 100) {
+				Tile& tile = mapReference->renderedTiles[ny * 100 + nx];
+
+				if (tile.tileType == Grass) {
+					unitSpeed = 1.0f;
+				}
+				else if (tile.tileType == Swamp) {
+					unitSpeed = 0.5f;
+				}
+			}
+		}
+	}
+}
+
 // since everything is decoupled we get the tile by comparing underlying path against the unit pos on screen (slow)
 int UnitBase::getcurrentCorrespondingTile(std::vector<Vector2>& pathToCheck, Vector2& _unitPos) {
 	if (pathToCheck.empty())
@@ -309,7 +330,6 @@ void Soldier::calculateNewPath() {
 		ref->walkablePathsNeighboors);
 	UnitBase::calculateNewPath();
 }
-
 
 void Soldier::commandUnit() {
 	if (targetBuilding == nullptr) {

@@ -75,7 +75,7 @@ Worker::~Worker()
 }
 
 DecisionTreeNode<Worker>* DistributingDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount > 25 && worker.targetResourceTracker->workersDistributing < 5 && !worker.isDevotedToBeSoldier) {
+	if (worker.targetResourceTracker->treeCount > 25 && worker.targetResourceTracker->workersDistributing < 2 && !worker.isDevotedToBeSoldier) {
 		worker.targetResourceTracker->workersDistributing++;
 		std::cout << "Unit decided to be a distributer" << std::endl;
 		return this->trueNode;
@@ -123,7 +123,8 @@ void DistributinAction::execute(Worker& worker)
 	if (worker.isCarryingWood || worker.isCarryingCoal ||
 		worker.isCarryingIronBar || worker.isCarryingIronArrow ||
 		worker.isCarryingIronSword) {
-		if (worker.buildings.empty())
+		// This should ensure we create 20 soldiers
+		if (worker.buildings.empty() || worker.targetResourceTracker->soldierCount == 20)
 			return;
 
 		Building* targetBuilding = nullptr;
@@ -135,7 +136,8 @@ void DistributinAction::execute(Worker& worker)
 				if (building
 					&& !dynamic_cast<CoalMile*>(building)
 					&& building->treeCount < building->minTreesNeeded
-					&& !building->isBuilding) {
+					&& !building->isBuilding
+					&& !building->isBuilt) {
 					targetBuilding = building;
 					break;
 				}

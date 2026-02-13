@@ -85,7 +85,8 @@ void TrainingCamp::update() {
             isWorkerAvailable = false;
         }
     }
-    else if (swordCount >= swordsNeeded && isWorkerAvailable) {
+    else if (swordCount >= swordsNeeded && isWorkerAvailable && resourceTracker->soldierCount < 20) {
+        // Comment: resourceTracker->soldierCount is incremented in game manager
         std::cout << "Training soldier, swords: " << swordCount << std::endl;
         isActive = true;
         swordCount -= swordsNeeded;
