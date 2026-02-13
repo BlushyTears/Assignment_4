@@ -91,7 +91,7 @@ DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
 }
 
 DecisionTreeNode<Worker>* CollectIronDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->ironOreCount <= 30 && worker.targetResourceTracker->treeCount > 60 && !worker.isCarryingWood && !worker.isDevotedToBeSoldier) {
+	if (worker.targetResourceTracker->ironOreCount <= 30 && worker.targetResourceTracker->treeCount > 80 && !worker.isCarryingWood && !worker.isDevotedToBeSoldier) {
 		return this->trueNode;
 	}
 	return this->falseNode;

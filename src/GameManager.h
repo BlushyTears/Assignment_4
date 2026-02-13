@@ -34,14 +34,14 @@ struct ResourceTracker {
 	int ironOreCount = 0;
 	int ironBarCount = 0;
 	int ironArrowCount = 0;
-	int ironSwordCount = 00;
+	int ironSwordCount = 0;
 	// Buildings:
 	int coalMileCount = 0;
 	int smelterBuildingCount = 0;
 	int armsmithForgeCount = 0;
 	int trainingCamp = 0;
 	// Units:
-	int workerCount = 50;
+	int workerCount;
 	int scoutCount = 0;
 	int coalMinerCount = 0;
 	int armSmithCount = 0;
@@ -107,7 +107,7 @@ struct Game {
 	int baseYUnitSpawn = 300;
 	int spacing = 5;
 
-	Game(int _initialUnits);
+	Game();
 
 	// This effectively our brain for deciding units to train
 	UnitToTrain getNextUnitToTrain();

@@ -40,8 +40,12 @@
 #include <iostream>
 #include <fstream>
 
+#include "FileRead.h"
+
 #include "GameManager.h"
 #include "MapManager.h"
+
+#include <chrono>
 
 // Next Todo (Remove this when done): 
 // Create scout class (It's dead simple since it's always just searching the map) that can search the map as well as fog of war for scouts to challenge
@@ -60,7 +64,15 @@ int main ()
 	
 	//stringstream mapData = transcribeData("..//mapData.txt");
 	//Map map(mapData, SCREEN_WIDTH, TILE_SIZE);
-	Game game(50);
+
+	Game game;
+
+	using std::chrono::high_resolution_clock;
+	using std::chrono::duration_cast;
+	using std::chrono::duration;
+	using std::chrono::milliseconds;
+
+	auto t1 = high_resolution_clock::now();
 
 	while (!WindowShouldClose())		
 	{
@@ -70,6 +82,13 @@ int main ()
 		game.update();
 		EndDrawing();
 	}
+
+	auto t2 = high_resolution_clock::now();
+	auto ms_int = duration_cast<milliseconds>(t2 - t1);
+	duration<double, std::milli> ms_double = t2 - t1;
+
+	std::cout << "Time to make soldiers assuming time control wasn't adjusted during runtime (in seconds): "
+		<< (ms_double.count() / 1000) * resourceParameters.timeControl;
 
 	CloseWindow();
 

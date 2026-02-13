@@ -1,7 +1,7 @@
 #include "GameManager.h"
 #include "FileRead.h"
 
-Game::Game(int _initialUnits) {
+Game::Game() {
 	setupStartingValues();
 
 	mapData = transcribeData("..//mapData.txt");
@@ -9,7 +9,9 @@ Game::Game(int _initialUnits) {
 	targetResourceCount = new ResourceTracker();
 	actualResourceCount = new ResourceTracker();
 
-	for (int i = 0; i < _initialUnits; i++) {
+	targetResourceCount->workerCount = resourceParameters.workerCount;
+
+	for (int i = 0; i < resourceParameters.workerCount; i++) {
 		if (xCount % initialFormationColumns == 0) {
 			xCount = 1;
 			yCount++;
@@ -36,12 +38,12 @@ void Game::startTrainingUnits(UnitToTrain unitType) {
 	for (auto& unit : units) {
 		Worker* worker = dynamic_cast<Worker*>(unit.get());
 
-		float trainTime = 5.0f;
+		float trainTime = 5.0;
 		switch (unitType) {
-		case EnumScout: trainTime = (30.0f / resourceParameters.timeControl); break;
-			case EnumCoalMiner: trainTime = (30.0f / resourceParameters.timeControl); break;
-			case EnumBuilder: trainTime = (30.0f / resourceParameters.timeControl); break;
-			case EnumSoldier: trainTime = (60.0f / resourceParameters.timeControl); break;
+		case EnumScout: trainTime = (resourceParameters.scoutTrainTime / resourceParameters.timeControl); break;
+			case EnumCoalMiner: trainTime = (resourceParameters.craftsmanTrainTime / resourceParameters.timeControl); break;
+			case EnumBuilder: trainTime = (resourceParameters.craftsmanTrainTime / resourceParameters.timeControl); break;
+			case EnumSoldier: trainTime = (resourceParameters.soldierTrainTime / resourceParameters.timeControl); break;
 		}
 
 		if (worker && !worker->isTraining) {

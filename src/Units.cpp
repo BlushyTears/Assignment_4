@@ -176,8 +176,24 @@ void Builder::commandUnit() {
 				}
 
 				if (!this->targetBuilding->isBuilt && !this->targetBuilding->isBuilding) {
+
+					int buildingTime = 0;
+					CoalMile* cm = dynamic_cast<CoalMile*>(targetBuilding);
+					ArmSmith* am = dynamic_cast<ArmSmith*>(targetBuilding);
+					Smelter* sm = dynamic_cast<Smelter*>(targetBuilding);
+					TrainingCamp* tc = dynamic_cast<TrainingCamp*>(targetBuilding);
+
+					if (cm)
+						buildingTime = resourceParameters.coalMileBuildTime;
+					if (am)
+						buildingTime = resourceParameters.SmelterBuildTime;
+					if (sm)
+						buildingTime = resourceParameters.ArmsmithBuildTime;
+					if (tc)
+						buildingTime = resourceParameters.TrainingCampBuildTime;
+
 					this->targetBuilding->isBuilding = true;
-					this->targetBuilding->buildTimer.setNewTimer(120 / resourceParameters.timeControl);
+					this->targetBuilding->buildTimer.setNewTimer(buildingTime / resourceParameters.timeControl);
 					this->targetBuilding->startBuildProcess();
 					targetResourceTracker->treeCount -= targetBuilding->minTreesNeeded;
 				}

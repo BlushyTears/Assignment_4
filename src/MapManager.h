@@ -15,6 +15,8 @@
 
 #include "Building.h"
 
+#include "FileRead.h"
+
 struct UnitBase;
 struct Worker;
 struct ResourceTracker;
@@ -81,8 +83,7 @@ struct Tile {
 	// In case the tile has entities on it
 	void spawnTrees(int _tileSize) {
 		if (tileType == Trees) {
-			int treeCount = 5;
-			for (int i = 0; i < treeCount; i++) {
+			for (int i = 0; i < resourceParameters.treesPerTile; i++) {
 				int x = getRandomNumber(1, _tileSize);
 				int y = getRandomNumber(1, _tileSize);
 

@@ -10,7 +10,7 @@ void CoalMile::update() {
         if (produceTimer.hasTimerEnded()) {
             resourceTracker->coalCount++;
             resourceTracker->treeCount -= costPerCoal;
-            coalCount++;
+            this->coalCount++;
             isActive = false;
         }
     }
@@ -18,7 +18,7 @@ void CoalMile::update() {
         isActive = true;
         treeCount -= costPerCoal;
         resourceTracker->woodInCoalMile = treeCount;
-        produceTimer.setNewTimer(30 / resourceParameters.timeControl);
+        produceTimer.setNewTimer(resourceParameters.coalProductionTimer / resourceParameters.timeControl);
     }
 }
 

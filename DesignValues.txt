@@ -1,4 +1,16 @@
 grassMovementSpeed:1.0
 swampMovementSpeed:0.5
-timeControl:5.0
+timeControl:1.0
 treesPerTile:5.0
+treeChopDownTimer:30.0
+ironBarProductionTimer:30.0
+coalProductionTimer:30.0
+swordProductionTimer:30.0
+workerCount:50.0
+scoutTrainTime:60.0
+soldierTrainTime:60.0
+craftsmanTrainTime:120.0
+coalMileBuildTime:60.0
+ArmsmithBuildTime:180.0
+SmelterBuildTime:120.0
+TrainingCampBuildTime:120.0
