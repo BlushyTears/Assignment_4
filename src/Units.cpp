@@ -177,7 +177,7 @@ void Builder::commandUnit() {
 
 				if (!this->targetBuilding->isBuilt && !this->targetBuilding->isBuilding) {
 					this->targetBuilding->isBuilding = true;
-					this->targetBuilding->buildTimer.setNewTimer(5);
+					this->targetBuilding->buildTimer.setNewTimer(120 / resourceParameters.timeControl);
 					this->targetBuilding->startBuildProcess();
 					targetResourceTracker->treeCount -= targetBuilding->minTreesNeeded;
 				}
@@ -187,6 +187,7 @@ void Builder::commandUnit() {
 					if (this->targetBuilding->buildTimer.hasTimerEnded()) {
 						this->targetBuilding->isBuilt = true;
 						this->targetBuilding->isBuilding = false;
+						this->targetBuilding -= this->targetBuilding->minTreesNeeded;
 						this->targetBuilding = nullptr;
 						currentPath.clear();
 						connectionIdx = 0;

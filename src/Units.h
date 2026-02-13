@@ -67,7 +67,7 @@ struct UnitBase {
 		Vector2 steering = { 0, 0 };
 
 		if (goalPos.x != -1 && Vector2Distance(pos, targetPos) > 0.5f) {
-			steering += Vector2Normalize(targetPos - pos) * unitSpeed;
+			steering += Vector2Normalize(targetPos - pos) * unitSpeed * GetFrameTime() * resourceParameters.timeControl;
 		}
 
 		pos += steering;

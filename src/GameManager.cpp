@@ -38,10 +38,10 @@ void Game::startTrainingUnits(UnitToTrain unitType) {
 
 		float trainTime = 5.0f;
 		switch (unitType) {
-			case EnumScout: trainTime = 3.0f; break;
-			case EnumCoalMiner: trainTime = 3.0f; break;
-			case EnumBuilder: trainTime = 3.0f; break;
-			case EnumSoldier: trainTime = 5.0f; break;
+		case EnumScout: trainTime = (30.0f / resourceParameters.timeControl); break;
+			case EnumCoalMiner: trainTime = (30.0f / resourceParameters.timeControl); break;
+			case EnumBuilder: trainTime = (30.0f / resourceParameters.timeControl); break;
+			case EnumSoldier: trainTime = (60.0f / resourceParameters.timeControl); break;
 		}
 
 		if (worker && !worker->isTraining) {
@@ -110,6 +110,13 @@ void Game::callUnits() {
 void Game::update() {
 	debugText();
 
+	if (IsKeyPressed(KEY_UP)) {
+		resourceParameters.timeControl += 1;
+	}
+	if (IsKeyPressed(KEY_DOWN)) {
+		resourceParameters.timeControl -= 1;
+	}
+
 	if (trainingUnits.size() < 3) {
 		UnitToTrain nextUnit = getNextUnitToTrain();
 		startTrainingUnits(nextUnit);
@@ -120,6 +127,9 @@ void Game::update() {
 	updateTrainingUnits();
 	controlBuildings();
 	gameMap->drawBuildings();
+
+	std::string text = "Speed Multiplier " + to_string(resourceParameters.timeControl);;
+	DrawText(text.c_str(), (SCREEN_WIDTH / 2) - 150, SCREEN_HEIGHT / 8, 24, GOLD);
 
 }
 

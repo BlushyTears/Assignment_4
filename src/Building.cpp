@@ -18,7 +18,7 @@ void CoalMile::update() {
         isActive = true;
         treeCount -= costPerCoal;
         resourceTracker->woodInCoalMile = treeCount;
-        produceTimer.setNewTimer(5);
+        produceTimer.setNewTimer(30 / resourceParameters.timeControl);
     }
 }
 
@@ -45,13 +45,13 @@ void Smelter::update() {
         isActive = true;
         ironOreCount -= 2;
         coalCount -= 3;
-        produceTimer.setNewTimer(6);
+        produceTimer.setNewTimer(30 / resourceParameters.timeControl);
     }
     else if (ironOreCount >= 2 && coalCount >= 3) {
         isActive = true;
         ironOreCount -= 2;
         coalCount -= 3;
-        produceTimer.setNewTimer(4);
+        produceTimer.setNewTimer(30 / resourceParameters.timeControl);
     }
 }
 
@@ -70,7 +70,7 @@ void ArmSmith::update() {
         isActive = true;
         coalCount -= coalNeeded;
         ironBarCount -= ironBarNeeded;
-        produceTimer.setNewTimer(6);
+        produceTimer.setNewTimer(60 / resourceParameters.timeControl);
     }
 }
 
@@ -85,11 +85,11 @@ void TrainingCamp::update() {
             isWorkerAvailable = false;
         }
     }
-    else if (swordCount >= swordsNeeded && isWorkerAvailable && resourceTracker->soldierCount < 20) {
+    else if (swordCount >= swordsNeeded && isWorkerAvailable) {
         // Comment: resourceTracker->soldierCount is incremented in game manager
         std::cout << "Training soldier, swords: " << swordCount << std::endl;
         isActive = true;
         swordCount -= swordsNeeded;
-        produceTimer.setNewTimer(5);
+        produceTimer.setNewTimer(120 / resourceParameters.timeControl);
     }
 }

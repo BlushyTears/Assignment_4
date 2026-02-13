@@ -75,7 +75,7 @@ Worker::~Worker()
 }
 
 DecisionTreeNode<Worker>* DistributingDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount > 25 && worker.targetResourceTracker->workersDistributing < 2 && !worker.isDevotedToBeSoldier) {
+	if (worker.targetResourceTracker->treeCount > 25 && worker.targetResourceTracker->workersDistributing < 5 && !worker.isDevotedToBeSoldier) {
 		worker.targetResourceTracker->workersDistributing++;
 		std::cout << "Unit decided to be a distributer" << std::endl;
 		return this->trueNode;
@@ -91,7 +91,7 @@ DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
 }
 
 DecisionTreeNode<Worker>* CollectIronDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->ironOreCount <= 30 && worker.targetResourceTracker->treeCount > 80 && !worker.isCarryingWood && !worker.isDevotedToBeSoldier) {
+	if (worker.targetResourceTracker->ironOreCount <= 30 && worker.targetResourceTracker->treeCount > 60 && !worker.isCarryingWood && !worker.isDevotedToBeSoldier) {
 		return this->trueNode;
 	}
 	return this->falseNode;
@@ -124,7 +124,7 @@ void DistributinAction::execute(Worker& worker)
 		worker.isCarryingIronBar || worker.isCarryingIronArrow ||
 		worker.isCarryingIronSword) {
 		// This should ensure we create 20 soldiers
-		if (worker.buildings.empty() || worker.targetResourceTracker->soldierCount == 20)
+		if (worker.buildings.empty())
 			return;
 
 		Building* targetBuilding = nullptr;

@@ -18,9 +18,9 @@ struct Building {
 	Vector2 pos;
 	Timer produceTimer;
 	Timer buildTimer;
-	int treeCount = 10;
+	int treeCount = 0;
 	int minTreesNeeded = 10;
-	bool isBuilt = true;
+	bool isBuilt = false;
 	bool isBuilding = false;
 	int tileSize = 10;
 

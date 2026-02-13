@@ -16,7 +16,7 @@ bool Map::tryToFellTree(Worker& unit) {
             Vector2 treePos = renderedTiles[unit.treeTileTargetIdx].position + entity.tileOffset;
             if (Vector2Length(unit.pos - treePos) <= 12.5f) {
                 unit.isChoppingWood = true;
-                unit.chopTimer.setNewTimer(3);
+                unit.chopTimer.setNewTimer(30 / resourceParameters.timeControl);
             }
             return false;
         }

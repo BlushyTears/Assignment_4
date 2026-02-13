@@ -128,7 +128,7 @@ struct Game {
 		DrawText(workerCount.c_str(), 100, 1180, 12, RED);
 
 		string scoutCount = "Scout count: " + to_string(targetResourceCount->scoutCount);
-		DrawText(scoutCount.c_str(), 225, 1180, 12, BLUE);
+		DrawText(scoutCount.c_str(), 225, 1160, 12, BLUE);
 
 		string builderCount = "Builder count: " + to_string(targetResourceCount->builderCount);
 		DrawText(builderCount.c_str(), 325, 1180, 12, ORANGE);

@@ -1,2 +1,4 @@
 grassMovementSpeed:1.0
 swampMovementSpeed:0.5
+timeControl:5.0
+treesPerTile:5.0

@@ -8,6 +8,8 @@
 struct ResourceParams {
 	float grassMovementSpeed;
 	float swampMovementSpeed;
+	float timeControl;
+	float treesPerTile;
 };
 
 inline ResourceParams resourceParameters;
@@ -28,6 +30,9 @@ inline void setupStartingValues() {
 
 			float value = std::stof(valueStr);
 
+			if (key == "timeControl") {
+				resourceParameters.timeControl = value;
+			}
 			if (key == "grassMovementSpeed") {
 				resourceParameters.grassMovementSpeed = value;
 			}
