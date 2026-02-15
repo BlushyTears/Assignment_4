@@ -9,6 +9,7 @@ Alternatively to run code: Double click build-VisualStudio2022.bat to generate .
 mapData.txt includes various cold data related to the values used such as time control etc.
 
 # Visuals and time control
+- On release mode via bin the program intentionally stops the program when 20 soldiers has been created. This can be disabled in main.cpp via the while loop.
 - To speed up: Press arrow up
 - To speed down: Press arrow down
 Note that if you speed up or down then the time to make 20 soldiers in main.cpp (Accessed via debug build via visual studio won't be totally accurate, so it's ideal to change time control in mapData.txt).
