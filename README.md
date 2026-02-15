@@ -1,4 +1,4 @@
-# Raylib-Quickstart
+# Assignment 4 information (Raylib used)
 
 Build has been provided in the .zip foldier via canvas as per usual in: bin/release/Assignment_4.exe
 
