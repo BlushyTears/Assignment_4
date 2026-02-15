@@ -356,7 +356,6 @@ void Soldier::commandUnit() {
 	else {
 		if (Vector2Distance(pos, targetPos) > 10) {
 			moveUnitTowardsInternalGoal();
-			testTile();
 		}
 		if (Vector2Distance(pos, targetPos) < 5) {
 			targetPos.x = (float)currentPath[connectionIdx].toNode.x;

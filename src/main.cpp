@@ -65,7 +65,9 @@ int main ()
 	//stringstream mapData = transcribeData("..//mapData.txt");
 	//Map map(mapData, SCREEN_WIDTH, TILE_SIZE);
 
-	Game game;
+	bool soldierGoalReached = false;
+
+	Game game(&soldierGoalReached);
 
 	using std::chrono::high_resolution_clock;
 	using std::chrono::duration_cast;
@@ -74,11 +76,10 @@ int main ()
 
 	auto t1 = high_resolution_clock::now();
 
-	while (!WindowShouldClose())		
+	while (!WindowShouldClose() && !soldierGoalReached)
 	{
 		BeginDrawing();
 		ClearBackground(BLACK);
-		//map.renderMap(SCREEN_WIDTH, SCREEN_WIDTH - 200, TILE_SIZE);
 		game.update();
 		EndDrawing();
 	}
@@ -87,8 +88,7 @@ int main ()
 	auto ms_int = duration_cast<milliseconds>(t2 - t1);
 	duration<double, std::milli> ms_double = t2 - t1;
 
-	std::cout << "Time to make soldiers assuming time control wasn't adjusted during runtime (in seconds): "
-		<< (ms_double.count() / 1000) * resourceParameters.timeControl;
+	std::cout << "Final time to make 20 soldiers (In seconds): " << (ms_double.count() / 1000) * resourceParameters.timeControl;
 
 	CloseWindow();
 

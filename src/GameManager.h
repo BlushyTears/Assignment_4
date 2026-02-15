@@ -49,12 +49,16 @@ struct ResourceTracker {
 	int builderCount = 0;
 	int soldierCount = 0;
 
+	int goalSoldierCount = 20;
+
+
 	// this is really bad and lazy
 	int workersDistributing = 0;
 	int woodInCoalMile = 0;
 	int devotedWorkerToBeSoldier = 0;
 
 	bool startTrainingSoldiers = false;
+	bool startDistributing = false;
 };
 
 // Final hybrid-based design for units:
@@ -110,7 +114,9 @@ struct Game {
 	int baseYUnitSpawn = 300;
 	int spacing = 5;
 
-	Game();
+	bool* soldierGoalReached = false;
+
+	Game(bool* _soldierGoalReached);
 
 	// This effectively our brain for deciding units to train
 	UnitToTrain getNextUnitToTrain();
@@ -136,11 +142,14 @@ struct Game {
 		string builderCount = "Builder count: " + to_string(targetResourceCount->builderCount);
 		DrawText(builderCount.c_str(), 325, 1180, 12, ORANGE);
 
-		string coalMinercount = "Coal Operator count: " + to_string(targetResourceCount->coalMinerCount);
+		string coalMinercount = "Coal miner count: " + to_string(targetResourceCount->coalMinerCount);
 		DrawText(coalMinercount.c_str(), 425, 1180, 12, GRAY);
 
 		string soldiercount = "Soldier count: " + to_string(targetResourceCount->soldierCount);
 		DrawText(soldiercount.c_str(), 100, 1160, 12, GOLD);
+
+		string armSmithCount = "Armsmith count: " + to_string(targetResourceCount->armSmithCount);
+		DrawText(armSmithCount.c_str(), 325, 1160, 12, GREEN);
 
 		string smelterCount = "Smelter count: " + to_string(targetResourceCount->smelterCount);
 		DrawText(smelterCount.c_str(), 225, 1180, 12, BLUE);

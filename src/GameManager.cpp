@@ -1,7 +1,10 @@
 #include "GameManager.h"
 #include "FileRead.h"
 
-Game::Game() {
+Game::Game(bool* _soldierGoalReached) {
+
+	this->soldierGoalReached = _soldierGoalReached;
+
 	setupStartingValues();
 
 	mapData = transcribeData("..//mapData.txt");
@@ -40,8 +43,10 @@ void Game::startTrainingUnits(UnitToTrain unitType) {
 
 		float trainTime = 5.0;
 		switch (unitType) {
-		case EnumScout: trainTime = (resourceParameters.scoutTrainTime / resourceParameters.timeControl); break;
+			case EnumScout: trainTime = (resourceParameters.scoutTrainTime / resourceParameters.timeControl); break;
 			case EnumCoalMiner: trainTime = (resourceParameters.craftsmanTrainTime / resourceParameters.timeControl); break;
+			case EnumArmSmith: trainTime = (resourceParameters.craftsmanTrainTime / resourceParameters.timeControl); break;
+			case EnumSmelter: trainTime = (resourceParameters.craftsmanTrainTime / resourceParameters.timeControl); break;
 			case EnumBuilder: trainTime = (resourceParameters.craftsmanTrainTime / resourceParameters.timeControl); break;
 			case EnumSoldier: trainTime = (resourceParameters.soldierTrainTime / resourceParameters.timeControl);break;
 		}
@@ -63,7 +68,7 @@ void Game::startTrainingUnits(UnitToTrain unitType) {
 }
 
 UnitToTrain Game::getNextUnitToTrain() {
-	if (targetResourceCount->scoutCount < 12) {
+	if (targetResourceCount->scoutCount < 15) {
 		targetResourceCount->scoutCount++;
 		return EnumScout;
 	}
@@ -107,6 +112,9 @@ void Game::callUnits() {
 }
 
 void Game::update() {
+	if (targetResourceCount->soldierCount >= targetResourceCount->goalSoldierCount) {
+		*soldierGoalReached = true;
+	}
 	debugText();
 
 	if (IsKeyPressed(KEY_UP)) {
@@ -155,7 +163,6 @@ void Game::convertUnit(UnitBase* unitPtr, UnitToTrain& unitType) {
 			case EnumSoldier:
 				unit = std::make_unique<Soldier>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
 				targetResourceCount->soldierCount++;
-				/*targetResourceCount->ironSwordCount--;*/
 				std::cout << "Actually trained a soldier pos x:" << tempPos.x << " pos y: " << tempPos.y << std::endl;
 				break;
 			case EnumNone:

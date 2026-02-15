@@ -75,16 +75,17 @@ Worker::~Worker()
 }
 
 DecisionTreeNode<Worker>* DistributingDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount > 25 && worker.targetResourceTracker->workersDistributing < 5 && !worker.isDevotedToBeSoldier) {
+	if (worker.targetResourceTracker->startDistributing && worker.targetResourceTracker->workersDistributing < 5 && !worker.isDevotedToBeSoldier) {
 		worker.targetResourceTracker->workersDistributing++;
-		std::cout << "Unit decided to be a distributer" << std::endl;
+		std::cout << "Unit decided to be a distributer, count " << worker.targetResourceTracker->workersDistributing << std::endl;
 		return this->trueNode;
 	}
 	return this->falseNode;
 }
 
 DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
-	if (worker.targetResourceTracker->treeCount <= 100 && !worker.isCarryingIron && !worker.isDevotedToBeSoldier && !worker.isCarryingIronSword) {
+	if (worker.isCarryingWood || (worker.targetResourceTracker->treeCount <= 50 
+		&& !worker.isCarryingIron && !worker.isDevotedToBeSoldier && !worker.isCarryingIronSword)) {
 		std::cout << "Unit decided to be a woodcutter" << std::endl;
 		return this->trueNode;
 	}
@@ -92,8 +93,8 @@ DecisionTreeNode<Worker>* CollectWoodDecision::getBranch(Worker& worker) {
 }
 
 DecisionTreeNode<Worker>* CollectIronDecision::getBranch(Worker& worker) {
-	if (worker.mapReference->ironOreIndices.size() > 0
-		&& worker.targetResourceTracker->treeCount > 150 && !worker.isCarryingWood && !worker.isDevotedToBeSoldier && !worker.isCarryingIronSword) {
+	if (worker.isCarryingIron || (worker.mapReference->ironOreIndices.size() > 0
+		&& worker.targetResourceTracker->treeCount > 150 && !worker.isCarryingWood && !worker.isDevotedToBeSoldier && !worker.isCarryingIronSword)) {
 		std::cout << "Unit decided to be an iron collector" << std::endl;
 		return this->trueNode;
 	}
@@ -111,10 +112,14 @@ DecisionTreeNode<Worker>* TrainUnitDecision::getBranch(Worker& worker) {
 			}
 		}
 	}
+
+	if (worker.trainingCamp != nullptr)
+		if (worker.trainingCamp->swordCount >= 20)
+			worker.targetResourceTracker->startTrainingSoldiers = true;
 	
 	if (worker.trainingCamp != nullptr && worker.targetResourceTracker->startTrainingSoldiers) {
 		if (worker.trainingCamp->swordCount > 0 && worker.targetResourceTracker->devotedWorkerToBeSoldier
-			< 25 && !worker.isCarryingIron && !worker.isDevotedToBeSoldier && !worker.isCarryingIronSword) {
+			<= 25 && !worker.isCarryingIron && !worker.isDevotedToBeSoldier && !worker.isCarryingIronSword) {
 
 			worker.targetResourceTracker->devotedWorkerToBeSoldier++;
 			worker.isDevotedToBeSoldier = true;
@@ -127,20 +132,14 @@ DecisionTreeNode<Worker>* TrainUnitDecision::getBranch(Worker& worker) {
 
 void DistributinAction::execute(Worker& worker)
 {
-	if (worker.targetResourceTracker->ironSwordCount >= 20)
-		worker.targetResourceTracker->startTrainingSoldiers = true;
-
-	string iron = "iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
+	string iron = "Global iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
 	DrawText(iron.c_str(), 300, 1110, 12, BLUE);
 
 	string trees = "Global Treecount: " + to_string(worker.targetResourceTracker->treeCount);
 	DrawText(trees.c_str(), 300, 1120, 12, BLUE);
 
-	string coal = "Coal mile tree count: " + to_string(worker.targetResourceTracker->woodInCoalMile);
-	DrawText(coal.c_str(), 300, 1130, 12, BLUE);
-
-	string globalSwordCount = "Sword count: " + to_string(worker.targetResourceTracker->ironSwordCount);
-	DrawText(globalSwordCount.c_str(), 300, 1140, 12, BLUE);
+	string globalSwordCount = "Global Sword count: " + to_string(worker.targetResourceTracker->ironSwordCount);
+	DrawText(globalSwordCount.c_str(), 300, 1130, 12, BLUE);
 
 	if (worker.isCarryingWood || worker.isCarryingCoal ||
 		worker.isCarryingIronBar || worker.isCarryingIronArrow ||
@@ -234,18 +233,18 @@ void DistributinAction::execute(Worker& worker)
 
 		// check what we're carrying and compare against the building we're closest to
 		if (Vector2Distance(worker.pos, buildingCenter) < 8.0f) {
-			if (worker.isCarryingWood)
+			if (worker.isCarryingIronSword) {
+				if (TrainingCamp* tc = dynamic_cast<TrainingCamp*>(targetBuilding)) {
+					tc->swordCount++;
+				}
+			}
+			else if (worker.isCarryingWood)
 				targetBuilding->treeCount++;
 			else if (worker.isCarryingCoal) {
 				if (Smelter* s = dynamic_cast<Smelter*>(targetBuilding))
 					s->coalCount++;
 				else if (ArmSmith* a = dynamic_cast<ArmSmith*>(targetBuilding))
 					a->coalCount++;
-			}
-			else if (worker.isCarryingIronSword) {
-				if (TrainingCamp* tc = dynamic_cast<TrainingCamp*>(targetBuilding)) {
-					tc->swordCount++;
-				}
 			}
 			else if (worker.isCarryingIronArrow) {
 				if (ArmSmith* a = dynamic_cast<ArmSmith*>(targetBuilding)) 
@@ -411,17 +410,14 @@ void DistributinAction::execute(Worker& worker)
 
 void CollectWoodAction::execute(Worker& worker)
 {
-	string iron = "iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
+	string iron = "Global iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
 	DrawText(iron.c_str(), 300, 1110, 12, RED);
 
 	string trees = "Global Treecount: " + to_string(worker.targetResourceTracker->treeCount);
 	DrawText(trees.c_str(), 300, 1120, 12, RED);
 
-	string coal = "Coal mile tree count: " + to_string(worker.targetResourceTracker->woodInCoalMile);
-	DrawText(coal.c_str(), 300, 1130, 12, RED);
-
-	string globalSwordCount = "Sword count: " + to_string(worker.targetResourceTracker->ironSwordCount);
-	DrawText(globalSwordCount.c_str(), 300, 1140, 12, RED);
+	string globalSwordCount = "Global Sword count: " + to_string(worker.targetResourceTracker->ironSwordCount);
+	DrawText(globalSwordCount.c_str(), 300, 1130, 12, RED);
 
 	if (worker.isCarryingWood)
 	{
@@ -458,6 +454,10 @@ void CollectWoodAction::execute(Worker& worker)
 	else {
 		if (worker.mapReference->tryToFellTree(worker)) {
 			worker.targetResourceTracker->treeCount++;
+			if (worker.targetResourceTracker->treeCount > 25) {
+				worker.targetResourceTracker->startDistributing = true;
+			}
+
 			worker.isCarryingWood = true;
 			int sameTileIdx = worker.treeTileTargetIdx;
 			worker.mapReference->removeTreeByIndex(worker.treeTileTargetIdx, worker.treeTargetIdx);
@@ -502,17 +502,14 @@ void CollectWoodAction::execute(Worker& worker)
 }
 
 void CollectIronAction::execute(Worker& worker) {
-	string iron = "iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
+	string iron = "Global iron ore count: " + to_string(worker.targetResourceTracker->ironOreCount);
 	DrawText(iron.c_str(), 300, 1110, 12, ORANGE);
 
 	string trees = "Global Treecount: " + to_string(worker.targetResourceTracker->treeCount);
 	DrawText(trees.c_str(), 300, 1120, 12, ORANGE);
 
-	string coal = "Coal mile tree count: " + to_string(worker.targetResourceTracker->woodInCoalMile);
-	DrawText(coal.c_str(), 300, 1130, 12, ORANGE);
-
-	string globalSwordCount = "Sword count: " + to_string(worker.targetResourceTracker->ironSwordCount);
-	DrawText(globalSwordCount.c_str(), 300, 1140, 12, ORANGE);
+	string globalSwordCount = "Global Sword count: " + to_string(worker.targetResourceTracker->ironSwordCount);
+	DrawText(globalSwordCount.c_str(), 300, 1130, 12, ORANGE);
 
 	if (worker.isCarryingIron) {
 		if (worker.buildings.empty())
@@ -616,7 +613,6 @@ void TrainUnitAction::execute(Worker& worker)
 {
 	// unit is at training camp and therefore let game manager train it
 	if (worker.isReadyToBeSoldier) {
-		DrawRectangleLines(worker.pos.x, worker.pos.y, 15, 15, PURPLE);
 		return;
 	}
 
