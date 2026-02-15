@@ -164,7 +164,6 @@ struct Worker : UnitBase {
 
 	bool isDevotedToBeSoldier = false;
 
-	bool isReadyToTrain = false;
 	TrainingCamp* trainingCamp = nullptr;
 
 	Worker(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu);

@@ -52,6 +52,9 @@ struct ResourceTracker {
 	// this is really bad and lazy
 	int workersDistributing = 0;
 	int woodInCoalMile = 0;
+	int devotedWorkerToBeSoldier = 0;
+
+	bool startTrainingSoldiers = false;
 };
 
 // Final hybrid-based design for units:
@@ -96,7 +99,7 @@ struct Game {
 	std::vector<std::unique_ptr<UnitBase>> units;
 	std::vector<Event> trainingUnits;
 
-	std::vector<Worker*> soldiersToTrain;
+	//std::vector<Worker*> soldiersToTrain;
 
 	TrainingCamp* tc = nullptr;
 
@@ -112,7 +115,7 @@ struct Game {
 	// This effectively our brain for deciding units to train
 	UnitToTrain getNextUnitToTrain();
 	void startTrainingUnits(UnitToTrain unitType);
-	void convertUnit(UnitBase* unitPtr, UnitToTrain unitType);
+	void convertUnit(UnitBase* unitPtr, UnitToTrain& unitType);
 	void spawnBuildings();
 	void updateTrainingUnits();
 	void callUnits();

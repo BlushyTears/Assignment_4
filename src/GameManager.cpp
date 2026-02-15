@@ -43,20 +43,27 @@ void Game::startTrainingUnits(UnitToTrain unitType) {
 		case EnumScout: trainTime = (resourceParameters.scoutTrainTime / resourceParameters.timeControl); break;
 			case EnumCoalMiner: trainTime = (resourceParameters.craftsmanTrainTime / resourceParameters.timeControl); break;
 			case EnumBuilder: trainTime = (resourceParameters.craftsmanTrainTime / resourceParameters.timeControl); break;
-			case EnumSoldier: trainTime = (resourceParameters.soldierTrainTime / resourceParameters.timeControl); break;
+			case EnumSoldier: trainTime = (resourceParameters.soldierTrainTime / resourceParameters.timeControl);break;
 		}
 
 		if (worker && !worker->isTraining) {
-			worker->isTraining = true;
-			Event trainEvent(worker, unitType, trainTime);
-			trainingUnits.push_back(trainEvent);
-			break;
+			if (unitType != EnumSoldier || (unit->isReadyToBeSoldier && worker->trainingCamp->swordCount > 0)) {
+				if (unitType == EnumSoldier) {
+					targetResourceCount->ironSwordCount--;
+					worker->trainingCamp->swordCount--;
+				}
+				
+				worker->isTraining = true;
+				Event trainEvent(worker, unitType, trainTime);
+				trainingUnits.push_back(trainEvent);
+				break;
+			}
 		}
 	}
 }
 
 UnitToTrain Game::getNextUnitToTrain() {
-	if (targetResourceCount->scoutCount < 8) {
+	if (targetResourceCount->scoutCount < 12) {
 		targetResourceCount->scoutCount++;
 		return EnumScout;
 	}
@@ -76,25 +83,15 @@ UnitToTrain Game::getNextUnitToTrain() {
 		targetResourceCount->smelterCount++;
 		return EnumSmelter;
 	}
-	else if (!soldiersToTrain.empty() && targetResourceCount->soldierCount < 20) {
-		targetResourceCount->soldierCount++;
+	else if (targetResourceCount->ironSwordCount > 0 && targetResourceCount->soldierCount <= 20) {
 		return EnumSoldier;
 	}
 	return EnumNone;
 }
 
 void Game::callUnits() {
-	int idx = 0;
 	for (auto& unit : units) {
-		idx++;
 		unit->renderUnit();
-
-		Worker* worker = dynamic_cast<Worker*>(unit.get());
-		if (worker) {
-			if (worker->isReadyToTrain) {
-				soldiersToTrain.push_back(worker);
-			}
-		}
 
 		if (!unit->isTraining) {
 			unit->commandUnit();
@@ -119,10 +116,8 @@ void Game::update() {
 		resourceParameters.timeControl -= 1;
 	}
 
-	if (trainingUnits.size() < 3) {
-		UnitToTrain nextUnit = getNextUnitToTrain();
-		startTrainingUnits(nextUnit);
-	}
+	UnitToTrain nextUnit = getNextUnitToTrain();
+	startTrainingUnits(nextUnit);
 
 	gameMap->renderMap(SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE);
 	callUnits();
@@ -132,13 +127,13 @@ void Game::update() {
 
 	std::string text = "Speed Multiplier " + to_string(resourceParameters.timeControl);;
 	DrawText(text.c_str(), (SCREEN_WIDTH / 2) - 150, SCREEN_HEIGHT / 8, 24, GOLD);
-
 }
 
-void Game::convertUnit(UnitBase* unitPtr, UnitToTrain unitType) {
+void Game::convertUnit(UnitBase* unitPtr, UnitToTrain& unitType) {
 	for (auto& unit : units) {
 		if (unit.get() == unitPtr) {
-			Vector2 tempPos = unitPtr->pos;
+
+			Vector2 tempPos = unit->pos;
 			targetResourceCount->workerCount--;
 
 			switch (unitType) {
@@ -159,12 +154,15 @@ void Game::convertUnit(UnitBase* unitPtr, UnitToTrain unitType) {
 				break;
 			case EnumSoldier:
 				unit = std::make_unique<Soldier>(tempPos.x, tempPos.y, gameMap, targetResourceCount, &units, gameMap->buildings);
+				targetResourceCount->soldierCount++;
+				/*targetResourceCount->ironSwordCount--;*/
+				std::cout << "Actually trained a soldier pos x:" << tempPos.x << " pos y: " << tempPos.y << std::endl;
 				break;
 			case EnumNone:
 				break;
 			}
+
 			unit->isTraining = false;
-			break;
 		}
 	}
 }

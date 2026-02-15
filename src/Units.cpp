@@ -339,32 +339,24 @@ void ArmSmithWorker::commandUnit() {
 
 void Soldier::calculateNewPath() {
 	auto ref = mapReference->scoutedTiles;
-	int targetBuildingIdx = getcurrentCorrespondingTile(ref->walkablePaths, targetBuilding->pos);
+	int randomNodeIdx = getRandomNumber(0, (ref->walkablePaths.size() - 1));
+
 	currentTileIdx = getcurrentCorrespondingTile(ref->walkablePaths, this->pos);
 	currentPath = ref->AStar(
 		ref->walkablePaths[currentTileIdx],
-		ref->walkablePaths[targetBuildingIdx],
+		ref->walkablePaths[randomNodeIdx],
 		ref->walkablePathsNeighboors);
 	UnitBase::calculateNewPath();
 }
 
 void Soldier::commandUnit() {
-	if (targetBuilding == nullptr) {
-		for (auto& building : buildings) {
-			CoalMile* cm = dynamic_cast<CoalMile*>(building);
-			if (cm) {
-				targetBuilding = cm;
-				break;
-			}
-		}
-		return;
-	}
 	if (currentPath.size() == 0) {
 		AwaitNewPath();
 	}
 	else {
 		if (Vector2Distance(pos, targetPos) > 10) {
 			moveUnitTowardsInternalGoal();
+			testTile();
 		}
 		if (Vector2Distance(pos, targetPos) < 5) {
 			targetPos.x = (float)currentPath[connectionIdx].toNode.x;

@@ -34,6 +34,7 @@ struct CoalMile : Building {
 	ResourceTracker* resourceTracker = nullptr;
 	int coalCount = 0;
 	int costPerCoal = 2;
+	int coalCountCap = 20;
 	bool isActive = false;
 
 	CoalMile(Vector2 _pos, ResourceTracker* _rt, int _tileSize) {
@@ -76,7 +77,8 @@ struct CoalMile : Building {
 struct Smelter : Building {
 	ResourceTracker* resourceTracker = nullptr;
 	int ironOreCount = 0;
-	int coalCostPerIronBar = 2;
+	int ironOreCostPerIronBar = 2;
+	int coalCostPerIronBar = 3;
 	int ironBarCount = 0;
 	int ironArrowCount = 0;
 	int ironArrowsGoal = 3;
@@ -196,7 +198,7 @@ struct TrainingCamp : Building {
 
 	bool isWorkerAvailable = false;
 	bool isActive = false;
-	int swordCount = 00;
+	int swordCount = 0;
 	int swordsNeeded = 1;
 
 	TrainingCamp(Vector2 _pos, ResourceTracker* _rt, int _tileSize) {

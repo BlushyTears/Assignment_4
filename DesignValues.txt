@@ -1,6 +1,6 @@
 grassMovementSpeed:1.0
 swampMovementSpeed:0.5
-timeControl:1.0
+timeControl:80.0
 treesPerTile:5.0
 treeChopDownTimer:30.0
 ironBarProductionTimer:30.0

@@ -14,7 +14,7 @@ void CoalMile::update() {
             isActive = false;
         }
     }
-    else if (treeCount >= costPerCoal) {
+    else if (treeCount >= costPerCoal && coalCount < coalCountCap) {
         isActive = true;
         treeCount -= costPerCoal;
         resourceTracker->woodInCoalMile = treeCount;
@@ -41,17 +41,17 @@ void Smelter::update() {
             }
         }
     }
-    else if (ironOreCount >= 2 && coalCount >= 3 && resourceTracker->ironArrowCount < ironArrowsGoal) {
+    else if (ironOreCount >= ironOreCostPerIronBar && coalCount >= coalCostPerIronBar && resourceTracker->ironArrowCount < ironArrowsGoal) {
         isActive = true;
-        ironOreCount -= 2;
-        coalCount -= 3;
-        produceTimer.setNewTimer(30 / resourceParameters.timeControl);
+        ironOreCount -= ironOreCostPerIronBar;
+        coalCount -= coalCostPerIronBar;
+        produceTimer.setNewTimer(resourceParameters.ironBarProductionTimer / resourceParameters.timeControl);
     }
-    else if (ironOreCount >= 2 && coalCount >= 3) {
+    else if (ironOreCount >= ironOreCostPerIronBar && coalCount >= coalCostPerIronBar) {
         isActive = true;
-        ironOreCount -= 2;
-        coalCount -= 3;
-        produceTimer.setNewTimer(30 / resourceParameters.timeControl);
+        ironOreCount -= ironOreCostPerIronBar;
+        coalCount -= coalCostPerIronBar;
+        produceTimer.setNewTimer(resourceParameters.ironBarProductionTimer / resourceParameters.timeControl);
     }
 }
 
@@ -62,6 +62,7 @@ void ArmSmith::update() {
     if (isActive) {
         produceTimer.updateTimer();
         if (produceTimer.hasTimerEnded()) {
+            resourceTracker->ironSwordCount++;
             ironSwordCount++;
             isActive = false;
         }
@@ -70,7 +71,7 @@ void ArmSmith::update() {
         isActive = true;
         coalCount -= coalNeeded;
         ironBarCount -= ironBarNeeded;
-        produceTimer.setNewTimer(60 / resourceParameters.timeControl);
+        produceTimer.setNewTimer(resourceParameters.swordProductionTimer / resourceParameters.timeControl);
     }
 }
 
@@ -87,9 +88,9 @@ void TrainingCamp::update() {
     }
     else if (swordCount >= swordsNeeded && isWorkerAvailable) {
         // Comment: resourceTracker->soldierCount is incremented in game manager
-        std::cout << "Training soldier, swords: " << swordCount << std::endl;
+        std::cout << "Training soldier, swords at training camp: " << swordCount << std::endl;
         isActive = true;
-        swordCount -= swordsNeeded;
-        produceTimer.setNewTimer(120 / resourceParameters.timeControl);
+        //swordCount -= swordsNeeded;
+        produceTimer.setNewTimer(resourceParameters.soldierTrainTime / resourceParameters.timeControl);
     }
 }

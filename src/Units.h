@@ -48,6 +48,8 @@ struct UnitBase {
 	std::vector<std::unique_ptr<UnitBase>>* _unitsReference = nullptr;
 	std::vector<Building*>& buildings;
 
+	bool isReadyToBeSoldier = false;
+
 	UnitBase(int _x, int _y, Map* _mp, ResourceTracker* _rt, std::vector<std::unique_ptr<UnitBase>>* _ur, std::vector<Building*>& _bu);
 	bool isAwaitingNewPath = false;
 
